@@ -1,0 +1,418 @@
+.phieu-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.phieu-brand-pill {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 53, 91, 0.18);
+  background: rgba(18, 53, 91, 0.06);
+  color: var(--primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.phieu-dashboard,
+.phieu-editor {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.phieu-list-panel {
+  position: sticky;
+  top: 88px;
+}
+
+.phieu-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.phieu-list-body {
+  display: grid;
+  gap: 14px;
+}
+
+.phieu-list-card {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.phieu-list-card.active,
+.phieu-list-card:hover {
+  border-color: rgba(18, 53, 91, 0.35);
+  box-shadow: 0 14px 30px rgba(18, 53, 91, 0.08);
+  transform: translateY(-1px);
+}
+
+.phieu-list-item {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.phieu-list-item span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.phieu-list-item-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 14px;
+}
+
+.phieu-preview-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.phieu-preview-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.phieu-preview-actions h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.phieu-preview-actions p {
+  margin: 0;
+  color: var(--text-muted);
+  max-width: 640px;
+}
+
+.phieu-action-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.phieu-form-card .alert {
+  margin-bottom: 18px;
+}
+
+.phieu-form-section + .phieu-form-section {
+  margin-top: 24px;
+}
+
+.phieu-form-section h4 {
+  margin: 0 0 14px;
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.phieu-form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.ct01-sheet {
+  padding: 28px;
+  border: 1px solid #dbe3ee;
+  border-radius: 24px;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
+  font-family: 'Times New Roman', serif;
+}
+
+.ct01-sheet * {
+  font-family: inherit;
+}
+
+.ct01-national-header {
+  text-align: center;
+}
+
+.ct01-national-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+
+.ct01-national-motto {
+  margin-top: 4px;
+  font-weight: 700;
+}
+
+.ct01-national-line {
+  width: 190px;
+  margin: 8px auto 0;
+  border-bottom: 1px solid #111827;
+}
+
+.ct01-title {
+  margin: 18px 0 20px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ct01-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.ct01-row-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 0.78fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ct01-split-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ct01-label {
+  flex-shrink: 0;
+}
+
+.ct01-underline-value {
+  display: inline-flex;
+  align-items: flex-end;
+  min-width: 120px;
+  min-height: 26px;
+  padding: 0 4px 2px;
+  border-bottom: 1px solid #111827;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.ct01-underline-value.grow,
+.ct01-split-field .ct01-underline-value.grow {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+.ct01-underline-value.multiline {
+  align-items: flex-start;
+  min-height: 42px;
+}
+
+.ct01-content-field {
+  min-height: 62px;
+}
+
+.ct01-short-field {
+  min-width: 110px;
+}
+
+.ct01-date-parts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.ct01-date-part {
+  min-width: 34px;
+  justify-content: center;
+}
+
+.ct01-date-year {
+  min-width: 54px;
+  justify-content: center;
+}
+
+.ct01-id-boxes {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ct01-id-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  border: 1px solid #111827;
+}
+
+.ct01-members {
+  margin-top: 14px;
+}
+
+.ct01-members-title {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.ct01-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ct01-table th,
+.ct01-table td {
+  border: 1px solid #111827;
+  padding: 6px;
+  vertical-align: middle;
+}
+
+.ct01-table th {
+  text-align: center;
+  font-weight: 700;
+}
+
+.ct01-table td {
+  height: 42px;
+}
+
+.ct01-table .centered {
+  text-align: center;
+}
+
+.ct01-signatures {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 28px;
+  margin-top: 20px;
+}
+
+.ct01-signature-block {
+  text-align: center;
+}
+
+.ct01-signature-date {
+  margin-bottom: 6px;
+  font-style: italic;
+}
+
+.ct01-signature-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.4;
+  min-height: 42px;
+}
+
+.ct01-signature-meta {
+  margin-top: 10px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.ct01-signature-meta-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ct01-signature-inline {
+  flex: 1;
+  min-width: 0;
+}
+
+.ct01-signature-space {
+  height: 74px;
+}
+
+.ct01-signature-note {
+  font-size: 12px;
+}
+
+.ct01-signature-name {
+  min-height: 20px;
+  font-weight: 700;
+}
+
+.ct01-notes {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #dbe3ee;
+  font-size: 12px;
+  text-align: justify;
+}
+
+.ct01-notes p {
+  margin: 6px 0;
+}
+
+@media (min-width: 1100px) {
+  .phieu-dashboard {
+    grid-template-columns: minmax(290px, 350px) minmax(0, 1fr);
+  }
+
+  .phieu-editor {
+    grid-template-columns: minmax(390px, 460px) minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1099px) {
+  .phieu-list-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 767px) {
+  .phieu-page-header,
+  .phieu-preview-actions,
+  .phieu-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ct01-sheet {
+    padding: 20px;
+  }
+
+  .ct01-row,
+  .ct01-split-field {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ct01-row-split,
+  .ct01-signatures {
+    grid-template-columns: 1fr;
+  }
+
+  .ct01-title {
+    font-size: 22px;
+  }
+
+  .ct01-id-boxes {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .phieu-list-item-actions,
+  .phieu-action-group,
+  .phieu-form-actions {
+    flex-direction: column;
+  }
+}

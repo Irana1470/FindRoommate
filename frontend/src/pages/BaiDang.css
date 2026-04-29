@@ -1,0 +1,7 @@
+.baidang-layout { display: grid; grid-template-columns: 280px 1fr; gap: 28px; align-items: start; }
+.filter-sidebar { position: sticky; top: 80px; }
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 32px; }
+@media (max-width: 768px) {
+  .baidang-layout { grid-template-columns: 1fr; }
+  .filter-sidebar { position: static; }
+}

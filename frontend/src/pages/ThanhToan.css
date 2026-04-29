@@ -1,0 +1,16 @@
+.balance-amount { font-size: 40px; font-weight: 900; color: var(--primary); margin-top: 8px; }
+.preset-amounts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.preset-btn {
+  padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  background: #fff; cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s;
+}
+.preset-btn:hover, .preset-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+.hoadon-item .card-body { padding: 18px 24px; }
+.hoadon-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.hoadon-title { font-weight: 700; font-size: 16px; }
+.hoadon-amount { font-size: 20px; font-weight: 800; color: var(--primary); }
+@media (max-width: 768px) {
+  .balance-amount { font-size: 32px; }
+  .hoadon-item .card-body { padding: 16px; }
+  .hoadon-row { flex-direction: column; }
+}

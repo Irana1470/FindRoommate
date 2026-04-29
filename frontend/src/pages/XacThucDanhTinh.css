@@ -1,0 +1,18 @@
+.xacthuc-wrapper { max-width: 640px; margin: 0 auto; }
+.cccd-upload-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.upload-label {
+  width: 100%; aspect-ratio: 16/10; border: 2px dashed var(--border);
+  border-radius: var(--radius); cursor: pointer; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color .2s; background: var(--bg);
+}
+.upload-label:hover { border-color: var(--primary); background: var(--primary-soft); }
+.upload-label img { width: 100%; height: 100%; object-fit: cover; }
+.upload-placeholder { text-align: center; }
+.upload-placeholder span { font-size: 48px; }
+.upload-placeholder p { font-weight: 600; margin-top: 8px; }
+.upload-placeholder small { color: var(--text-muted); font-size: 12px; }
+.upload-label-text { font-weight: 600; font-size: 14px; }
+.xacthuc-result { text-align: center; padding: 20px 0; }
+.result-icon { font-size: 64px; margin-bottom: 12px; }
+.result-info { background: var(--bg); border-radius: var(--radius-sm); padding: 20px; text-align: left; margin-top: 20px; }
