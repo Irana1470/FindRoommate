@@ -94,7 +94,7 @@ export default function XacThucDanhTinh() {
         throw new Error(res.data?.message || 'Xac thuc that bai');
       }
 
-      setResult(verificationResult);
+      setResult({ xacThucThanhCong: true });
       await layThongTinToi();
       toast.success(verificationResult?.thongBao || 'Xac thuc danh tinh thanh cong');
     } catch (error) {
@@ -116,7 +116,7 @@ export default function XacThucDanhTinh() {
               <div style={{ fontSize: 56, marginBottom: 12 }}>🔐</div>
               <h1 style={{ fontSize: 26, fontWeight: 800 }}>Xac thuc danh tinh</h1>
               <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>
-                Tai len CCCD/CMND de xac minh danh tinh. Anh chi duoc dung tam thoi de OCR va khong duoc luu lai.
+                Tai len CCCD/CMND de xac minh danh tinh. Anh se duoc xu ly ro net tren backend truoc khi OCR va khong duoc luu lai.
               </p>
             </div>
 
@@ -128,11 +128,6 @@ export default function XacThucDanhTinh() {
               <div className="xacthuc-result">
                 <div className="result-icon">✅</div>
                 <h2>Xac thuc thanh cong!</h2>
-                <div className="result-info">
-                  {result.hoTen && <div className="info-row"><span>Ho ten:</span><strong>{result.hoTen}</strong></div>}
-                  {result.ngaySinh && <div className="info-row"><span>Ngay sinh:</span><strong>{result.ngaySinh}</strong></div>}
-                  {result.diaChi && <div className="info-row"><span>Dia chi:</span><strong>{result.diaChi}</strong></div>}
-                </div>
                 <button className="btn btn-primary btn-lg" style={{ marginTop: 20 }} onClick={() => navigate('/')}>
                   Ve trang chu
                 </button>
@@ -174,7 +169,7 @@ export default function XacThucDanhTinh() {
                 </div>
 
                 <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading} style={{ marginTop: 24 }}>
-                  {loading ? 'Dang xac thuc bang AI...' : 'Xac thuc ngay'}
+                  {loading ? 'Dang xu ly anh va xac thuc...' : 'Xac thuc ngay'}
                 </button>
               </form>
             )}

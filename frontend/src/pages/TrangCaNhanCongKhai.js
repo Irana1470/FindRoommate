@@ -109,10 +109,6 @@ export default function TrangCaNhanCongKhai() {
                   {profile.xacThuc && <span className="badge badge-success">Đã xác thực</span>}
                 </div>
 
-                <p className="public-profile-subtitle">
-                  Đây là trang hồ sơ công khai để xem thông tin cơ bản, mức độ uy tín và kết nối trực tiếp với người dùng này.
-                </p>
-
                 <div className="public-profile-meta">
                   <span>Tham gia từ: {formatJoinDate(profile.ngayTao)}</span>
                   <span>Điểm đánh giá: {hasRating ? profile.diemDanhGia.toFixed(1) : 'Chưa có'}</span>

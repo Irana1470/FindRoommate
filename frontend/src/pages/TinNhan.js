@@ -71,7 +71,7 @@ export default function TinNhan() {
       return undefined;
     }
 
-    nguoiDungAPI.layThongTin(targetUserId)
+    nguoiDungAPI.layTrangCaNhanCongKhai(targetUserId)
       .then(response => {
         if (!active) {
           return;
