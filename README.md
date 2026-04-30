@@ -28,11 +28,11 @@ roommate-app/
 | Đăng bài tìm ghép    ✅
 | Apply vào phòng    ✅    
 | Duyệt yêu cầu       ✅   
-| Chia tiền phòng         
-| Thanh toán tiền phòng           
-| Chat realtime           
-| Đánh giá                
-| Lập phiếu tạm trú           
+| Chia tiền phòng    ✅     
+| Thanh toán tiền phòng    ✅       
+| Chat realtime ✅          
+| Đánh giá ✅               
+| Lập phiếu tạm trú (ẫu giấy đăng ký tạm trú mới nhất 2026 là Mẫu CT01 tờ khai thay đổi thông tin cư trú ban hành kèm theo Thông tư 53/2025/TT-BCA) -> tải về dưới định dạng file PDF            
 
 ---
 
