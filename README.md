@@ -32,13 +32,11 @@ roommate-app/
 | Thanh toán tiền phòng    ✅       
 | Chat realtime ✅          
 | Đánh giá ✅               
-| Lập phiếu tạm trú (ẫu giấy đăng ký tạm trú mới nhất 2026 là Mẫu CT01 tờ khai thay đổi thông tin cư trú ban hành kèm theo Thông tư 53/2025/TT-BCA) -> tải về dưới định dạng file PDF            
-
+| Lập phiếu tạm trú (ẫu giấy đăng ký tạm trú mới nhất 2026 là Mẫu CT01 tờ khai thay đổi thông tin cư trú ban hành kèm theo Thông tư 53/2025/TT-BCA) -> tải về dưới định dạng file PDF ✅            
+| Tích hợp Google Maps API để hiển thị bản đồ phòng ✅
 ---
 
 ## Mở Rộng 
-
-- [ ] Tích hợp Google Maps API để hiển thị bản đồ phòng
 - [ ] Tích hợp VNPay/MoMo thay vì ví nội bộ
 - [ ] Push notification (Firebase FCM)
 - [ ] Mobile app (React Native)
