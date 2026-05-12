@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { baiDangAPI, yeuCauAPI } from '../services/api';
@@ -16,7 +16,7 @@ export default function ChiTietBaiDang() {
   const [applying, setApplying] = useState(false);
   const [moTaYeuCau, setMoTaYeuCau] = useState('');
   const [showApply, setShowApply] = useState(false);
-  const [imgIdx, setImgIdx] = useState(0);
+  const [mediaIdx, setMediaIdx] = useState(0);
 
   useEffect(() => {
     baiDangAPI.layChiTiet(id)
@@ -49,6 +49,43 @@ export default function ChiTietBaiDang() {
     }
   };
 
+  const mediaItems = useMemo(() => {
+    if (!bd) {
+      return [];
+    }
+
+    const items = (bd.images || []).map(src => ({ type: 'image', src }));
+    if (bd.video) {
+      items.unshift({ type: 'video', src: bd.video });
+    }
+    return items;
+  }, [bd]);
+
+  useEffect(() => {
+    if (!mediaItems.length) {
+      setMediaIdx(0);
+      return;
+    }
+
+    if (mediaIdx > mediaItems.length - 1) {
+      setMediaIdx(0);
+    }
+  }, [mediaItems, mediaIdx]);
+
+  const goPrevMedia = () => {
+    if (mediaItems.length <= 1) {
+      return;
+    }
+    setMediaIdx(current => (current === 0 ? mediaItems.length - 1 : current - 1));
+  };
+
+  const goNextMedia = () => {
+    if (mediaItems.length <= 1) {
+      return;
+    }
+    setMediaIdx(current => (current === mediaItems.length - 1 ? 0 : current + 1));
+  };
+
   if (loading) return <div className="spinner" />;
   if (!bd) {
     return (
@@ -58,7 +95,7 @@ export default function ChiTietBaiDang() {
     );
   }
 
-  const imgs = bd.images || [];
+  const currentMedia = mediaItems[mediaIdx] || null;
 
   return (
     <div className="container page-wrapper">
@@ -66,25 +103,52 @@ export default function ChiTietBaiDang() {
         <div>
           <div className="gallery">
             <div className="gallery-main">
-              {imgs.length > 0 ? (
-                <img src={imgs[imgIdx]} alt="Phong" />
+              {currentMedia ? (
+                currentMedia.type === 'video' ? (
+                  <video src={currentMedia.src} controls className="gallery-video" />
+                ) : (
+                  <img src={currentMedia.src} alt="Phòng" />
+                )
               ) : (
                 <div className="gallery-placeholder">Nhà</div>
               )}
+
+              {mediaItems.length > 1 && (
+                <>
+                  <button type="button" className="gallery-nav gallery-nav-left" onClick={goPrevMedia} aria-label="Xem media trước">
+                    ‹
+                  </button>
+                  <button type="button" className="gallery-nav gallery-nav-right" onClick={goNextMedia} aria-label="Xem media tiếp theo">
+                    ›
+                  </button>
+                </>
+              )}
             </div>
 
-            {imgs.length > 1 && (
+            {mediaItems.length > 1 && (
               <div className="gallery-thumbs">
-                {imgs.map((img, index) => (
-                  <img
-                    key={img}
-                    src={img}
-                    alt=""
-                    className={index === imgIdx ? 'active' : ''}
-                    onClick={() => setImgIdx(index)}
-                  />
+                {mediaItems.map((item, index) => (
+                  <button
+                    key={`${item.type}-${item.src}`}
+                    type="button"
+                    className={`gallery-thumb ${index === mediaIdx ? 'active' : ''}`}
+                    onClick={() => setMediaIdx(index)}
+                  >
+                    {item.type === 'video' ? (
+                      <>
+                        <video src={item.src} muted className="gallery-thumb-media" />
+                        <span className="gallery-thumb-badge">Video</span>
+                      </>
+                    ) : (
+                      <img src={item.src} alt="" className="gallery-thumb-media" />
+                    )}
+                  </button>
                 ))}
               </div>
+            )}
+
+            {bd.video && (
+              <div className="gallery-video-note">Bài đăng này có kèm video giới thiệu phòng.</div>
             )}
           </div>
 
@@ -149,9 +213,18 @@ export default function ChiTietBaiDang() {
                 </div>
               </div>
 
-              {user?.maNguoiDung !== bd.maNguoiDang && bd.maPhong && (
+              {user?.maNguoiDung !== bd.maNguoiDang && (
                 <div style={{ marginTop: 20 }}>
-                  {!showApply ? (
+                  {!bd.maPhong ? (
+                    <>
+                      <button className="btn btn-primary btn-block btn-lg" disabled>
+                        Gửi yêu cầu vào phòng này
+                      </button>
+                      <div style={{ marginTop: 8, fontSize: 13, color: 'var(--text-muted)' }}>
+                        Bài đăng này chưa liên kết với phòng cụ thể nên hiện chưa thể gửi yêu cầu tham gia.
+                      </div>
+                    </>
+                  ) : !showApply ? (
                     <button className="btn btn-primary btn-block btn-lg" onClick={() => setShowApply(true)}>
                       Gửi yêu cầu vào phòng này
                     </button>

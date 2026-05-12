@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
+import useTheme from '../../hooks/useTheme';
 import { chatAPI, danhGiaAPI, phongAPI, thanhToanAPI, yeuCauAPI } from '../../services/api';
-import { formatConversationTime, getTimestamp, sortByNewest } from '../../utils/inbox';
+import { formatConversationTime, getTimestamp, sortByNewest, subscribeConversationRead } from '../../utils/inbox';
+import brandLogo from '../../assets/findroommate-logo.svg';
 import './Navbar.css';
 
 const STORAGE_KEY = 'frm_notifications_seen_at';
+const currencyFormatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
 
 function BellIcon() {
   return (
@@ -33,8 +36,26 @@ function MessageIcon() {
   );
 }
 
+function ThemeIcon({ theme }) {
+  if (theme === 'dark') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M14.5 3.2a8.8 8.8 0 1 0 6.3 14.9A9.4 9.4 0 0 1 14.5 3.2Z" fill="currentColor" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="4.6" fill="currentColor" />
+      <path d="M12 1.8v2.6M12 19.6v2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M1.8 12h2.6M19.6 12h2.6M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const { user, dangXuat } = useAuthStore();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -43,6 +64,11 @@ export default function Navbar() {
   const [conversations, setConversations] = useState([]);
   const menuRef = useRef(null);
   const notificationRef = useRef(null);
+
+  const unreadMessageCount = useMemo(
+    () => conversations.reduce((total, conversation) => total + (conversation.chuaDoc || 0), 0),
+    [conversations]
+  );
 
   const handleDangXuat = () => {
     dangXuat();
@@ -66,6 +92,26 @@ export default function Navbar() {
 
   useEffect(() => {
     if (!user?.maNguoiDung) {
+      return undefined;
+    }
+
+    return subscribeConversationRead(partnerId => {
+      if (!partnerId) {
+        return;
+      }
+
+      setConversations(current => current.map(conversation => (
+        String(conversation.maNguoiKia) === String(partnerId)
+          ? { ...conversation, chuaDoc: 0 }
+          : conversation
+      )));
+
+      setNotifications(current => current.filter(item => item.id !== `message-${partnerId}`));
+    });
+  }, [user?.maNguoiDung]);
+
+  useEffect(() => {
+    if (!user?.maNguoiDung) {
       setNotifications([]);
       setConversations([]);
       return undefined;
@@ -79,11 +125,20 @@ export default function Navbar() {
           setLoadingNotifications(true);
         }
 
-        const [conversationResponse, ratingResponse, roomResponse, invoiceResponse] = await Promise.all([
+        const [
+          conversationResponse,
+          ratingResponse,
+          roomResponse,
+          invoiceResponse,
+          sentRequestResponse,
+          ownerInvoiceResponse,
+        ] = await Promise.all([
           chatAPI.layHoiThoai(),
           danhGiaAPI.layNhanDuoc(),
           phongAPI.layPhongCuaToi().catch(() => ({ data: { data: [] } })),
           thanhToanAPI.layHoaDon().catch(() => ({ data: { data: [] } })),
+          yeuCauAPI.layCuaToi().catch(() => ({ data: { data: [] } })),
+          thanhToanAPI.layHoaDonPhongCuaToi().catch(() => ({ data: { data: [] } })),
         ]);
 
         const conversationData = sortByNewest(conversationResponse.data.data || []);
@@ -103,20 +158,33 @@ export default function Navbar() {
           .map(request => ({
             id: `request-${request.maYeuCau}`,
             type: 'request',
-            title: `${request.tenNguoiDung} vừa apply vào phòng`,
+            title: `${request.tenNguoiDung} vừa gửi yêu cầu vào phòng`,
             description: request.tenPhong || 'Có yêu cầu tham gia mới',
             href: '/yeu-cau',
             thoiGian: request.ngayYeuCau,
           }));
 
-        const messageItems = conversationData.map(conversation => ({
-          id: `message-${conversation.maNguoiKia}`,
-          type: 'message',
-          title: `${conversation.tenNguoiKia} đã gửi tin nhắn`,
-          description: conversation.tinNhanCuoi,
-          href: `/tin-nhan?nguoiDung=${conversation.maNguoiKia}`,
-          thoiGian: conversation.thoiGian,
-        }));
+        const approvedRequestItems = (sentRequestResponse.data.data || [])
+          .filter(request => request.trangThai === 'Chap nhan')
+          .map(request => ({
+            id: `request-approved-${request.maYeuCau}`,
+            type: 'request',
+            title: `Yêu cầu vào phòng ${request.tenPhong} đã được chấp nhận`,
+            description: 'Bạn đã được chấp nhận vào phòng',
+            href: '/yeu-cau',
+            thoiGian: request.ngayYeuCau,
+          }));
+
+        const messageItems = conversationData
+          .filter(conversation => (conversation.chuaDoc || 0) > 0)
+          .map(conversation => ({
+            id: `message-${conversation.maNguoiKia}`,
+            type: 'message',
+            title: `${conversation.tenNguoiKia} đã gửi tin nhắn`,
+            description: conversation.tinNhanCuoi,
+            href: `/tin-nhan?nguoiDung=${conversation.maNguoiKia}`,
+            thoiGian: conversation.thoiGian,
+          }));
 
         const ratingItems = (ratingResponse.data.data || []).map(review => ({
           id: `rating-${review.maDanhGia}`,
@@ -133,12 +201,30 @@ export default function Navbar() {
             id: `invoice-${invoice.maHoaDon}`,
             type: 'invoice',
             title: `Hóa đơn #${invoice.maHoaDon} chưa thanh toán`,
-            description: `${invoice.tenPhong} • ${invoice.tongTien ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(invoice.tongTien) : ''}`,
+            description: `${invoice.tenPhong} • ${invoice.tongTien ? currencyFormatter.format(invoice.tongTien) : ''}`,
             href: '/hoa-don',
             thoiGian: invoice.ngayTao,
           }));
 
-        setNotifications(sortByNewest([...requestItems, ...messageItems, ...ratingItems, ...invoiceItems]).slice(0, 12));
+        const ownerPaidInvoiceItems = (ownerInvoiceResponse.data.data || [])
+          .filter(invoice => invoice.trangThai === 'Da thanh toan' && invoice.ngayThanhToan)
+          .map(invoice => ({
+            id: `owner-paid-invoice-${invoice.maHoaDon}`,
+            type: 'invoice',
+            title: `${invoice.tenNguoiDung} đã thanh toán hóa đơn`,
+            description: `${invoice.tenPhong} • ${invoice.tongTien ? currencyFormatter.format(invoice.tongTien) : ''}`,
+            href: '/hoa-don',
+            thoiGian: invoice.ngayThanhToan,
+          }));
+
+        setNotifications(sortByNewest([
+          ...requestItems,
+          ...approvedRequestItems,
+          ...messageItems,
+          ...ratingItems,
+          ...invoiceItems,
+          ...ownerPaidInvoiceItems,
+        ]).slice(0, 12));
       } catch {
         if (active) {
           setNotifications([]);
@@ -176,7 +262,8 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="container navbar-inner">
         <Link to="/" className="navbar-brand">
-          🏠 <span>FindRoomMate</span>
+          <img src={brandLogo} alt="FindRoomMate" className="navbar-brand-logo" />
+          <span>FindRoomMate</span>
         </Link>
 
         <div className="navbar-links">
@@ -186,12 +273,21 @@ export default function Navbar() {
         </div>
 
         <div className="navbar-actions">
+          <button
+            type="button"
+            className="action-icon-button"
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+          >
+            <ThemeIcon theme={theme} />
+          </button>
+
           {user ? (
             <>
               <div className="notification-area" ref={notificationRef}>
                 <Link to="/tin-nhan" className="action-icon-button" title="Tin nhắn">
                   <MessageIcon />
-                  {conversations.length > 0 && <span className="action-badge">{Math.min(conversations.length, 9)}</span>}
+                  {unreadMessageCount > 0 && <span className="action-badge">{Math.min(unreadMessageCount, 9)}</span>}
                 </Link>
 
                 <button type="button" className="action-icon-button" onClick={handleToggleNotifications} title="Thông báo">
@@ -245,6 +341,9 @@ export default function Navbar() {
                     <Link to="/thanh-toan" className="dropdown-item">💰 Ví tiền</Link>
                     <Link to="/hoa-don" className="dropdown-item">📄 Hóa đơn của tôi</Link>
                     <Link to="/tam-tru" className="dropdown-item">📑 Tạm trú</Link>
+                    {user.role === 'ADMIN' && (
+                      <Link to="/admin/bao-cao-chat" className="dropdown-item">🛡 Quản lý báo cáo chat</Link>
+                    )}
                     {!user.xacThuc && (
                       <Link to="/xac-thuc" className="dropdown-item highlight">🔐 Xác thực CCCD</Link>
                     )}
@@ -265,3 +364,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

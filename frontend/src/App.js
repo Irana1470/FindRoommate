@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import useAuthStore from './store/authStore';
+import useTheme, { ThemeProvider } from './hooks/useTheme';
 
 // Layout
 import Navbar from './components/layout/Navbar';
@@ -28,6 +29,7 @@ import DanhGia from './pages/DanhGia';
 import PhieuTamTru from './pages/PhieuTamTru';
 import YeuCau from './pages/YeuCau';
 import TinNhan from './pages/TinNhan';
+import AdminBaoCaoHoiThoai from './pages/AdminBaoCaoHoiThoai';
 
 import './styles/global.css';
 
@@ -36,16 +38,43 @@ const PrivateRoute = ({ children }) => {
   return token ? children : <Navigate to="/dang-nhap" />;
 };
 
+const AdminRoute = ({ children }) => {
+  const { token, user } = useAuthStore();
+  if (!token) {
+    return <Navigate to="/dang-nhap" />;
+  }
+  return user?.role === 'ADMIN' ? children : <Navigate to="/" replace />;
+};
+
 export default function App() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
+  );
+}
+
+function AppShell() {
   const { token, layThongTinToi } = useAuthStore();
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (token) layThongTinToi();
-  }, [token]);
+  }, [token, layThongTinToi]);
 
   return (
     <BrowserRouter>
-      <Toaster position="top-right" />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: theme === 'dark' ? '#142033' : '#ffffff',
+            color: theme === 'dark' ? '#f5f9ff' : '#132235',
+            border: theme === 'dark' ? '1px solid #314766' : '1px solid #d6e1ec',
+            boxShadow: theme === 'dark' ? '0 18px 42px rgba(0, 0, 0, 0.4)' : '0 18px 42px rgba(16, 36, 58, 0.12)',
+          },
+        }}
+      />
       <Navbar />
       <main className="main-content">
         <Routes>
@@ -71,6 +100,7 @@ export default function App() {
           <Route path="/tam-tru" element={<PrivateRoute><PhieuTamTru /></PrivateRoute>} />
           <Route path="/yeu-cau" element={<PrivateRoute><YeuCau /></PrivateRoute>} />
           <Route path="/tin-nhan" element={<PrivateRoute><TinNhan /></PrivateRoute>} />
+          <Route path="/admin/bao-cao-chat" element={<AdminRoute><AdminBaoCaoHoiThoai /></AdminRoute>} />
         </Routes>
       </main>
       <Footer />

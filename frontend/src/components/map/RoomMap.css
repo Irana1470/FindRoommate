@@ -1,0 +1,50 @@
+.room-map-section {
+  margin-bottom: 28px;
+}
+
+.room-map-shell {
+  height: 420px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.room-map {
+  width: 100%;
+  height: 100%;
+}
+
+.room-map-note,
+.room-map-error {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.room-map-note {
+  color: var(--text-muted);
+}
+
+.room-map-error {
+  color: var(--alert-danger-text);
+}
+
+.room-distance-list {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.room-distance-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.user-location-marker {
+  filter: hue-rotate(165deg) saturate(1.4);
+}

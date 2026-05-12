@@ -1,0 +1,41 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldStroke" x1="48" y1="28" x2="208" y2="228" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6D37A"/>
+      <stop offset="0.52" stop-color="#D69A34"/>
+      <stop offset="1" stop-color="#A56413"/>
+    </linearGradient>
+    <linearGradient id="goldFill" x1="142" y1="76" x2="208" y2="206" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6CF68"/>
+      <stop offset="1" stop-color="#C8841E"/>
+    </linearGradient>
+    <linearGradient id="navyFill" x1="44" y1="78" x2="128" y2="214" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#233C69"/>
+      <stop offset="1" stop-color="#0E1D3C"/>
+    </linearGradient>
+    <filter id="shadow" x="16" y="16" width="224" height="224" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0A1730" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <path d="M50 94.5C50 82.8 55.4 71.8 64.7 64.8L110.6 30.3C121 22.5 135 22.5 145.4 30.3L191.3 64.8C200.6 71.8 206 82.8 206 94.5V167" stroke="url(#goldStroke)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M39 113C39 164.9 76.2 207 128 214" stroke="url(#navyFill)" stroke-width="14" stroke-linecap="round"/>
+    <path d="M217 113C217 164.9 179.8 207 128 214" stroke="url(#goldStroke)" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="82" cy="96" r="18" fill="url(#navyFill)"/>
+    <path d="M55 156.5C55 135.8 71.8 119 92.5 119C103.7 119 114.4 124 121.6 132.5C125.1 136.6 131.2 137.3 135.7 134.3L151.2 123.9C162.8 116.1 177.8 115.2 190.2 121.4C202.5 127.6 210.3 140.2 210.3 154V185C210.3 188.3 208.1 191.2 204.9 192L160.5 204V154.6C160.5 143.1 151.2 133.8 139.7 133.8H127.1C122.9 133.8 118.8 135.1 115.4 137.6L93.8 153.4C87.5 158 83.8 165.4 83.8 173.2V204L60.2 192.6C57.1 191.1 55 188 55 184.5V156.5Z" fill="url(#navyFill)"/>
+    <circle cx="174" cy="96" r="18" fill="url(#goldFill)"/>
+    <path d="M172.2 119C193.2 119 210.3 136.1 210.3 157.1V184.5C210.3 188 208.1 191.1 204.9 192.6L172.2 208V119Z" fill="url(#goldFill)"/>
+    <path d="M128 133.8H139.7C151.2 133.8 160.5 143.1 160.5 154.6V204L128 214V133.8Z" fill="url(#goldFill)" fill-opacity="0.9"/>
+    <rect x="117" y="69" width="14" height="14" rx="3" fill="url(#goldFill)"/>
+    <rect x="139" y="69" width="14" height="14" rx="3" fill="url(#goldFill)"/>
+    <rect x="117" y="91" width="14" height="14" rx="3" fill="url(#goldFill)"/>
+    <rect x="139" y="91" width="14" height="14" rx="3" fill="url(#goldFill)"/>
+    <path d="M112 154.5C112 148.1 117.1 143 123.5 143H132.5C138.9 143 144 148.1 144 154.5V187.6C138.9 185.4 133.5 184.2 128 184.2C122.5 184.2 117.1 185.4 112 187.6V154.5Z" fill="url(#navyFill)"/>
+    <circle cx="138.5" cy="162.5" r="3.5" fill="url(#goldFill)"/>
+    <circle cx="128" cy="216" r="30" fill="white"/>
+    <path d="M128 186V246" stroke="#E3E6EC" stroke-width="2"/>
+    <path d="M128 188C144.6 188 158 201.4 158 218C158 234.6 144.6 248 128 248C111.4 248 98 234.6 98 218C98 201.4 111.4 188 128 188Z" fill="url(#goldStroke)"/>
+    <path d="M128 188C111.4 188 98 201.4 98 218C98 234.6 111.4 248 128 248V188Z" fill="url(#navyFill)"/>
+    <path d="M132.6 201.5H136.4C142 201.5 146.5 206 146.5 211.6H138C138 210 136.8 208.8 135.2 208.8H128.7C126.2 208.8 124.2 210.8 124.2 213.3C124.2 215.2 125.4 216.8 127.1 217.4L137.7 221.2C143 223.1 146.5 228.2 146.5 233.8C146.5 241.2 140.5 247.2 133.1 247.2H132.6V253H123.9V247.2H120.6C114.6 247.2 109.7 242.3 109.7 236.3V235.3H118.2V236C118.2 238.4 120.2 240.4 122.6 240.4H129.7C132.4 240.4 134.7 238.2 134.7 235.4C134.7 233.4 133.4 231.6 131.5 230.9L121 227.1C115.7 225.1 112.2 220.1 112.2 214.5C112.2 207.1 118.2 201.1 125.6 201.1H123.9V195.4H132.6V201.5Z" fill="white"/>
+  </g>
+</svg>

@@ -7,7 +7,8 @@ const formatCurrency = n =>
 export default function RoomCard({ baiDang }) {
   const navigate = useNavigate();
   const imgs = baiDang.images || [];
-  const thumb = imgs[0] || null;
+  const thumb = baiDang.video || imgs[0] || null;
+  const hasVideo = Boolean(baiDang.video);
 
   const openBaiDang = () => {
     navigate(`/bai-dang/${baiDang.maBaiDang}`);
@@ -29,7 +30,21 @@ export default function RoomCard({ baiDang }) {
       onKeyDown={handleKeyDown}
     >
       {thumb ? (
-        <img src={thumb} alt={baiDang.moTa} className="room-card-img" />
+        <div style={{ position: 'relative' }}>
+          {hasVideo ? (
+            <video src={thumb} className="room-card-img" muted playsInline preload="metadata" />
+          ) : (
+            <img src={thumb} alt={baiDang.moTa} className="room-card-img" />
+          )}
+          {hasVideo && (
+            <span
+              className="badge badge-dark"
+              style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0, 0, 0, 0.7)' }}
+            >
+              Video
+            </span>
+          )}
+        </div>
       ) : (
         <div className="room-card-img" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>Nhà</div>
       )}

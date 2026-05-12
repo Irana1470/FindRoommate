@@ -17,6 +17,20 @@
   box-shadow: 0 28px 64px rgba(8, 26, 45, 0.22);
 }
 
+.auth-card .form-label {
+  color: var(--secondary);
+}
+
+.auth-card .form-control {
+  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+.auth-card .form-control::placeholder {
+  color: var(--text-muted);
+  opacity: 0.82;
+}
+
 .auth-card .card-body { padding: 34px; }
 
 .auth-logo {
@@ -70,12 +84,58 @@
 
 .auth-footer a:hover { color: var(--primary-dark); }
 
+[data-theme='dark'] .auth-wrapper {
+  background:
+    radial-gradient(circle at top left, rgba(101, 183, 255, 0.18), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(22, 35, 56, 0.34), transparent 30%),
+    linear-gradient(135deg, #07111f 0%, #0f172a 50%, #111827 100%);
+}
+
+[data-theme='dark'] .auth-card {
+  border-color: rgba(121, 168, 255, 0.18);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+[data-theme='dark'] .auth-title {
+  color: var(--text);
+}
+
+[data-theme='dark'] .auth-subtitle,
+[data-theme='dark'] .auth-footer {
+  color: var(--text-muted);
+}
+
+[data-theme='dark'] .auth-card .form-label {
+  color: var(--text);
+}
+
+[data-theme='dark'] .auth-card .form-control {
+  color: var(--text);
+  background: #0f172a;
+  border-color: #2b3c58;
+}
+
+[data-theme='dark'] .auth-card .form-control::placeholder {
+  color: #8ea2c1;
+}
+
+[data-theme='dark'] .auth-card .form-control:focus {
+  border-color: rgba(121, 168, 255, 0.62);
+  box-shadow: 0 0 0 4px rgba(121, 168, 255, 0.16);
+}
+
 @media (max-width: 768px) {
   .auth-wrapper {
     padding: 24px 16px;
     background:
       radial-gradient(circle at top, rgba(47, 111, 163, 0.24), transparent 30%),
       linear-gradient(180deg, #091a2d 0%, #102a43 38%, #eef4fb 38%, #f8fbff 100%);
+  }
+
+  [data-theme='dark'] .auth-wrapper {
+    background:
+      radial-gradient(circle at top, rgba(101, 183, 255, 0.18), transparent 24%),
+      linear-gradient(180deg, #07111f 0%, #0f172a 42%, #111827 100%);
   }
 
   .auth-card .card-body { padding: 26px 22px; }

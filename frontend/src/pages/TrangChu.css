@@ -149,6 +149,22 @@
 
 .cta-content h2 { font-size: 36px; font-weight: 800; margin-bottom: 12px; }
 .cta-content p { color: rgba(255, 255, 255, 0.74); margin-bottom: 28px; font-size: 16px; }
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.cta-outline-light {
+  border-color: rgba(255, 255, 255, 0.82);
+  color: #fff;
+}
+
+.cta-outline-light:hover {
+  background: #fff;
+  color: var(--primary);
+}
 
 @media (max-width: 768px) {
   .hero {
@@ -160,4 +176,5 @@
   .hero-search .btn,
   .hero-search .form-control { border-radius: 16px; }
   .section-header { flex-direction: column; }
+  .cta-actions { flex-direction: column; }
 }

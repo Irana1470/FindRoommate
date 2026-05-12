@@ -5,10 +5,24 @@
 }
 .dropzone.active, .dropzone:hover { border-color: var(--primary); background: var(--primary-soft); }
 .dropzone-content p { margin-top: 8px; color: var(--text-muted); }
+.media-existing-group,
+.media-preview-group { margin-top: 14px; }
 .preview-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .preview-item { position: relative; }
 .preview-item img { width: 100px; height: 80px; object-fit: cover; border-radius: 8px; }
-.preview-item-static { border: 1px solid var(--border); border-radius: 10px; padding: 4px; background: #fff; }
+.preview-item-static { border: 1px solid var(--border); border-radius: 10px; padding: 4px; background: var(--surface); }
+.preview-item-static img { display: block; }
+.video-preview-card {
+  position: relative;
+  width: min(100%, 420px);
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}
+.video-preview-player { display: block; width: 100%; max-height: 320px; }
+.preview-remove-video { top: 8px; right: 8px; }
 .preview-remove {
   position: absolute; top: -6px; right: -6px; width: 22px; height: 22px;
   border-radius: 50%; background: #E53E3E; color: #fff; border: none; cursor: pointer;

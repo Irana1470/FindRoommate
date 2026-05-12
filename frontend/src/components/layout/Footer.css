@@ -1,18 +1,24 @@
 .footer {
-  background: var(--secondary); color: #fff; margin-top: 80px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-alt) 92%, var(--secondary) 8%), color-mix(in srgb, var(--surface) 88%, transparent));
+  color: var(--text);
+  margin-top: 80px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 }
 .footer-inner {
   display: grid; grid-template-columns: 2fr 1fr 1fr;
   gap: 40px; padding: 48px 0;
 }
 .footer-logo { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 12px; }
-.footer-brand p { color: #A0AEC0; font-size: 14px; line-height: 1.7; }
-.footer-links h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #A0AEC0; margin-bottom: 16px; }
-.footer-links a { display: block; color: #E2E8F0; text-decoration: none; margin-bottom: 10px; font-size: 14px; transition: color 0.2s; }
+.footer-brand p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+.footer-links h4 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; }
+.footer-links a { display: block; color: var(--text); text-decoration: none; margin-bottom: 10px; font-size: 14px; transition: color 0.2s; opacity: 0.88; }
 .footer-links a:hover { color: var(--primary); }
 .footer-bottom {
-  border-top: 1px solid #4A5568; text-align: center;
-  padding: 20px 0; color: #718096; font-size: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  text-align: center;
+  padding: 20px 0;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 @media (max-width: 768px) {
   .footer-inner { grid-template-columns: 1fr; gap: 24px; }

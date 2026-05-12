@@ -1,31 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { thanhToanAPI } from '../services/api';
+import { nguoiDungAPI, thanhToanAPI } from '../services/api';
 import './ThanhToan.css';
 
 const fmt = n => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 
+const getTransactionMeta = transaction => {
+  if (transaction.chieu === 'IN') {
+    return {
+      amountClassName: 'wallet-transaction-amount in',
+      prefix: '+',
+      badgeClassName: 'badge badge-success',
+      label: transaction.loai === 'NAP_TIEN' ? 'Nạp tiền' : 'Tiền vào',
+    };
+  }
+
+  return {
+    amountClassName: 'wallet-transaction-amount out',
+    prefix: '-',
+    badgeClassName: 'badge badge-danger',
+    label: transaction.loai === 'THANH_TOAN_HOA_DON' ? 'Thanh toán hóa đơn' : 'Tiền ra',
+  };
+};
+
 export default function ThanhToan() {
   const [soDu, setSoDu] = useState(0);
   const [napSoTien, setNapSoTien] = useState('');
+  const [lichSuGiaoDich, setLichSuGiaoDich] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSoDu = async () => {
+  const fetchWalletData = async () => {
     setLoading(true);
     try {
-      const res = await thanhToanAPI.xemSoDu();
-      setSoDu(res.data.data || 0);
-    } catch {}
-    setLoading(false);
+      const [soDuResponse, lichSuResponse] = await Promise.all([
+        thanhToanAPI.xemSoDu(),
+        nguoiDungAPI.layLichSuGiaoDich().catch(() => ({ data: { data: [] } })),
+      ]);
+
+      setSoDu(soDuResponse.data.data || 0);
+      setLichSuGiaoDich(lichSuResponse.data.data || []);
+    } catch {
+      toast.error('Không tải được thông tin ví');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    fetchSoDu();
+    fetchWalletData();
   }, []);
 
   const handleNapTien = async () => {
-    if (!napSoTien || isNaN(napSoTien)) {
+    if (!napSoTien || Number.isNaN(Number(napSoTien)) || Number(napSoTien) <= 0) {
       toast.error('Nhập số tiền hợp lệ');
       return;
     }
@@ -35,8 +62,9 @@ export default function ThanhToan() {
       setSoDu(res.data.data);
       setNapSoTien('');
       toast.success('Nạp tiền thành công!');
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Thất bại');
+      await fetchWalletData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Thất bại');
     }
   };
 
@@ -46,7 +74,7 @@ export default function ThanhToan() {
 
   return (
     <div className="container page-wrapper">
-      <h1 className="section-title">💳 Ví tiền</h1>
+      <h1 className="section-title">Ví tiền</h1>
 
       <div className="grid-2" style={{ alignItems: 'start' }}>
         <div className="card">
@@ -63,13 +91,13 @@ export default function ThanhToan() {
           <div className="card-header">Nạp tiền vào ví</div>
           <div className="card-body">
             <div className="preset-amounts">
-              {presets.map(p => (
+              {presets.map(amount => (
                 <button
-                  key={p}
-                  className={`preset-btn ${parseFloat(napSoTien) === p ? 'active' : ''}`}
-                  onClick={() => setNapSoTien(String(p))}
+                  key={amount}
+                  className={`preset-btn ${parseFloat(napSoTien) === amount ? 'active' : ''}`}
+                  onClick={() => setNapSoTien(String(amount))}
                 >
-                  {fmt(p)}
+                  {fmt(amount)}
                 </button>
               ))}
             </div>
@@ -78,16 +106,17 @@ export default function ThanhToan() {
               <input
                 className="form-control"
                 type="number"
+                min="0"
                 placeholder="Nhập số tiền..."
                 value={napSoTien}
-                onChange={e => setNapSoTien(e.target.value)}
+                onChange={event => setNapSoTien(event.target.value)}
               />
             </div>
             <button className="btn btn-primary btn-block" onClick={handleNapTien}>
-              ➕ Nạp tiền
+              Nạp tiền
             </button>
             <div className="alert alert-info" style={{ marginTop: 16, fontSize: 13 }}>
-              ℹ️ Trong môi trường thực tế, nạp tiền sẽ tích hợp VNPay / MoMo / ZaloPay.
+              Trong môi trường thực tế, nạp tiền sẽ tích hợp VNPay / MoMo / ZaloPay.
             </div>
           </div>
         </div>
@@ -107,6 +136,39 @@ export default function ThanhToan() {
           <Link to="/hoa-don" className="btn btn-outline">
             Xem hóa đơn
           </Link>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="card-header">Lịch sử giao dịch</div>
+        <div className="card-body">
+          {lichSuGiaoDich.length === 0 ? (
+            <div className="wallet-transaction-empty">Chưa có giao dịch nào trong ví.</div>
+          ) : (
+            <div className="wallet-transaction-list">
+              {lichSuGiaoDich.map(transaction => {
+                const meta = getTransactionMeta(transaction);
+
+                return (
+                  <div key={transaction.maGiaoDich} className="wallet-transaction-item">
+                    <div className="wallet-transaction-main">
+                      <div className="wallet-transaction-title-row">
+                        <span className={meta.badgeClassName}>{meta.label}</span>
+                        <strong className={meta.amountClassName}>{meta.prefix}{fmt(transaction.soTien)}</strong>
+                      </div>
+                      <div className="wallet-transaction-description">
+                        {transaction.moTa || 'Không có mô tả'}
+                      </div>
+                      <div className="wallet-transaction-meta">
+                        <span>Số dư sau giao dịch: {fmt(transaction.soDuSauGiaoDich)}</span>
+                        <span>{transaction.ngayTao ? new Date(transaction.ngayTao).toLocaleString('vi-VN') : ''}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

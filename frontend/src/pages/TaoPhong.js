@@ -7,8 +7,6 @@ const createInitialForm = () => ({
   title: '',
   giaTien: '',
   tienDichVu: '',
-  tienDien: '',
-  tienNuoc: '',
   soNguoiToiDa: '',
   tinhThanh: '',
   quanHuyen: '',
@@ -45,7 +43,7 @@ export default function TaoPhong() {
       })
       .catch(() => {
         if (active) {
-          toast.error('Khong tai duoc danh sach tinh thanh');
+          toast.error('Không tải được danh sách tỉnh thành');
         }
       })
       .finally(() => {
@@ -76,7 +74,7 @@ export default function TaoPhong() {
 
         const phong = (response.data.data || []).find(item => String(item.maPhong) === String(id));
         if (!phong) {
-          toast.error('Ban khong co quyen chinh sua phong nay');
+          toast.error('Bạn không có quyền chỉnh sửa phòng này');
           navigate('/quan-ly-phong', { replace: true });
           return;
         }
@@ -85,8 +83,6 @@ export default function TaoPhong() {
           title: phong.title || '',
           giaTien: phong.giaTien || '',
           tienDichVu: phong.tienDichVu || '',
-          tienDien: phong.tienDien || '',
-          tienNuoc: phong.tienNuoc || '',
           soNguoiToiDa: phong.soNguoiToiDa || '',
           tinhThanh: phong.tinhThanh || '',
           quanHuyen: phong.quanHuyen || '',
@@ -97,7 +93,7 @@ export default function TaoPhong() {
       })
       .catch(() => {
         if (active) {
-          toast.error('Khong tai duoc du lieu phong');
+          toast.error('Không tải được dữ liệu phòng');
           navigate('/quan-ly-phong', { replace: true });
         }
       })
@@ -149,7 +145,7 @@ export default function TaoPhong() {
       })
       .catch(() => {
         if (active) {
-          toast.error('Khong tai duoc danh sach quan huyen');
+          toast.error('Không tải được danh sách quận huyện');
         }
       })
       .finally(() => {
@@ -202,7 +198,7 @@ export default function TaoPhong() {
     event.preventDefault();
 
     if (!form.tinhThanh || !form.quanHuyen) {
-      toast.error('Vui long chon day du tinh thanh va quan huyen');
+      toast.error('Vui lòng chọn đầy đủ tỉnh thành và quận huyện');
       return;
     }
 
@@ -213,8 +209,6 @@ export default function TaoPhong() {
         title: form.title,
         giaTien: parseMoney(form.giaTien),
         tienDichVu: parseMoney(form.tienDichVu),
-        tienDien: parseMoney(form.tienDien),
-        tienNuoc: parseMoney(form.tienNuoc),
         soNguoiToiDa: parseInt(form.soNguoiToiDa, 10),
         tinhThanh: form.tinhThanh,
         quanHuyen: form.quanHuyen,
@@ -224,18 +218,18 @@ export default function TaoPhong() {
 
       if (isEditMode) {
         await phongAPI.capNhat(id, payload);
-        toast.success('Cap nhat phong thanh cong');
+        toast.success('Cập nhật phòng thành công');
       } else {
         await phongAPI.taoPhong({
           ...payload,
           maPhongCha: form.maPhongCha ? parseInt(form.maPhongCha, 10) : undefined,
         });
-        toast.success('Tao phong thanh cong');
+        toast.success('Tạo phòng thành công');
       }
 
       navigate('/quan-ly-phong');
     } catch (error) {
-      toast.error(error.response?.data?.message || (isEditMode ? 'Cap nhat phong that bai' : 'Tao phong that bai'));
+      toast.error(error.response?.data?.message || (isEditMode ? 'Cập nhật phòng thất bại' : 'Tạo phòng thất bại'));
     } finally {
       setSubmitting(false);
     }
@@ -249,23 +243,23 @@ export default function TaoPhong() {
     <div className="container page-wrapper">
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <div className="card">
-          <div className="card-header">{isEditMode ? 'Chinh sua phong' : 'Tao phong moi'}</div>
+          <div className="card-header">{isEditMode ? 'Chỉnh sửa phòng' : 'Tạo phòng mới'}</div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label className="form-label">Ten phong / Tieu de *</label>
+                <label className="form-label">Tên phòng / Tiêu đề *</label>
                 <input
                   className="form-control"
                   required
                   value={form.title}
                   onChange={event => set('title', event.target.value)}
-                  placeholder="VD: Phong 101 - Chung cu ABC"
+                  placeholder="VD: Phòng 101 - Chung cư ABC"
                 />
               </div>
 
               <div className="grid-2">
                 <div className="form-group">
-                  <label className="form-label">Gia thue (d/thang) *</label>
+                  <label className="form-label">Giá thuê (đ/tháng) *</label>
                   <input
                     className="form-control"
                     type="number"
@@ -278,7 +272,7 @@ export default function TaoPhong() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">So nguoi toi da *</label>
+                  <label className="form-label">Số người tối đa *</label>
                   <input
                     className="form-control"
                     type="number"
@@ -292,9 +286,9 @@ export default function TaoPhong() {
                 </div>
               </div>
 
-              <div className="grid-3">
+              <div className="grid-2">
                 <div className="form-group">
-                  <label className="form-label">Tien dich vu</label>
+                  <label className="form-label">Tiền dịch vụ</label>
                   <input
                     className="form-control"
                     type="number"
@@ -304,35 +298,11 @@ export default function TaoPhong() {
                     placeholder="300000"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label className="form-label">Tien dien</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="0"
-                    value={form.tienDien}
-                    onChange={event => set('tienDien', event.target.value)}
-                    placeholder="3500"
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Tien nuoc</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="0"
-                    value={form.tienNuoc}
-                    onChange={event => set('tienNuoc', event.target.value)}
-                    placeholder="15000"
-                  />
-                </div>
               </div>
 
               <div className="grid-2">
                 <div className="form-group">
-                  <label className="form-label">Tinh / Thanh pho *</label>
+                  <label className="form-label">Tỉnh / Thành phố *</label>
                   <select
                     className="form-control"
                     required
@@ -340,7 +310,7 @@ export default function TaoPhong() {
                     onChange={handleTinhThanhChange}
                     disabled={loadingTinhThanh}
                   >
-                    <option value="">{loadingTinhThanh ? 'Dang tai tinh thanh...' : '-- Chon tinh thanh --'}</option>
+                    <option value="">{loadingTinhThanh ? 'Đang tải tỉnh thành...' : '-- Chọn tỉnh thành --'}</option>
                     {tinhThanhs.map(item => (
                       <option key={item.code} value={item.code}>{item.name}</option>
                     ))}
@@ -348,7 +318,7 @@ export default function TaoPhong() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Quan / Huyen *</label>
+                  <label className="form-label">Quận / Huyện *</label>
                   <select
                     className="form-control"
                     required
@@ -358,10 +328,10 @@ export default function TaoPhong() {
                   >
                     <option value="">
                       {!selectedTinhThanhCode
-                        ? '-- Chon tinh thanh truoc --'
+                        ? '-- Chọn tỉnh thành trước --'
                         : loadingQuanHuyen
-                          ? 'Dang tai quan huyen...'
-                          : '-- Chon quan huyen --'}
+                          ? 'Đang tải quận huyện...'
+                          : '-- Chọn quận huyện --'}
                     </option>
                     {quanHuyens.map(item => (
                       <option key={item.code} value={item.code}>{item.name}</option>
@@ -371,49 +341,46 @@ export default function TaoPhong() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Dia chi chi tiet *</label>
+                <label className="form-label">Địa chỉ chi tiết *</label>
                 <input
                   className="form-control"
                   required
                   value={form.diaChi}
                   onChange={event => set('diaChi', event.target.value)}
-                  placeholder="So nha, ten duong, toa nha..."
+                  placeholder="Số nhà, tên đường, tòa nhà..."
                 />
               </div>
 
               {!isEditMode && (
                 <div className="form-group">
-                  <label className="form-label">Ma phong cha (neu la phong trong can ho)</label>
+                  <label className="form-label">Mã phòng cha (nếu là phòng trong căn hộ)</label>
                   <input
                     className="form-control"
                     type="number"
                     value={form.maPhongCha}
                     onChange={event => set('maPhongCha', event.target.value)}
-                    placeholder="ID can ho"
+                    placeholder="ID căn hộ"
                   />
                 </div>
               )}
 
               <div className="form-group">
-                <label className="form-label">Mo ta</label>
+                <label className="form-label">Mô tả</label>
                 <textarea
                   className="form-control"
                   rows={4}
                   value={form.moTa}
                   onChange={event => set('moTa', event.target.value)}
-                  placeholder="Tien nghi, dieu kien, noi that..."
+                  placeholder="Tiện nghi, điều kiện, nội thất..."
                 />
               </div>
 
-              <div className="alert alert-info">
-                Du lieu tinh/thanh va quan/huyen duoc lay tu Vietnam Provinces API trong `openapi.json`.
-              </div>
 
               <div style={{ display: 'flex', gap: 10 }}>
                 <button type="submit" className="btn btn-primary btn-lg" style={{ flex: 1 }} disabled={submitting}>
-                  {submitting ? 'Dang xu ly...' : isEditMode ? 'Luu thay doi' : 'Tao phong'}
+                  {submitting ? 'Đang xử lý...' : isEditMode ? 'Lưu thay đổi' : 'Tạo phòng'}
                 </button>
-                <button type="button" className="btn btn-secondary btn-lg" onClick={() => navigate(-1)}>Huy</button>
+                <button type="button" className="btn btn-secondary btn-lg" onClick={() => navigate(-1)}>Hủy</button>
               </div>
             </form>
           </div>

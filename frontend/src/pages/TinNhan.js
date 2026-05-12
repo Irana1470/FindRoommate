@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import ChatBox from '../components/chat/ChatBox';
 import { chatAPI, nguoiDungAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
-import { formatConversationTime, getAvatarUrl, sortByNewest } from '../utils/inbox';
+import { emitConversationRead, formatConversationTime, getAvatarUrl, sortByNewest } from '../utils/inbox';
 import './TinNhan.css';
 
 const buildAdHocConversation = profile => ({
@@ -14,6 +14,9 @@ const buildAdHocConversation = profile => ({
   tinNhanCuoi: 'Bắt đầu cuộc trò chuyện mới',
   thoiGian: null,
   laTinCuaToi: false,
+  online: false,
+  lastActive: null,
+  chuaDoc: 0,
   tamThoi: true,
 });
 
@@ -23,45 +26,32 @@ export default function TinNhan() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const selectedId = searchParams.get('nguoiDung');
 
+  const loadConversations = async () => {
+    try {
+      const response = await chatAPI.layHoiThoai();
+      const data = sortByNewest(response.data.data || []);
+      setConversations(current => {
+        const selected = current.find(item => String(item.maNguoiKia) === selectedId && item.tamThoi);
+        return selected && !data.some(item => item.maNguoiKia === selected.maNguoiKia)
+          ? sortByNewest([selected, ...data])
+          : data;
+      });
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không tải được danh sách hội thoại');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let active = true;
-
-    const loadConversations = async () => {
-      try {
-        const response = await chatAPI.layHoiThoai();
-        if (!active) {
-          return;
-        }
-
-        const data = sortByNewest(response.data.data || []);
-        setConversations(current => {
-          const selected = current.find(item => String(item.maNguoiKia) === selectedId && item.tamThoi);
-          return selected && !data.some(item => item.maNguoiKia === selected.maNguoiKia)
-            ? sortByNewest([selected, ...data])
-            : data;
-        });
-      } catch (error) {
-        if (active) {
-          toast.error(error.response?.data?.message || 'Không tải được danh sách hội thoại');
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
     loadConversations();
-    const timer = window.setInterval(loadConversations, 12000);
-
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, [selectedId]);
+    const timer = window.setInterval(loadConversations, 15000);
+    return () => window.clearInterval(timer);
+  }, [refreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -106,6 +96,33 @@ export default function TinNhan() {
     setSearchParams({ nguoiDung: String(conversations[0].maNguoiKia) }, { replace: true });
   }, [conversations, loading, selectedId, setSearchParams]);
 
+  useEffect(() => {
+    if (loading || !selectedId) {
+      return;
+    }
+
+    if (!conversations.some(item => String(item.maNguoiKia) === selectedId)) {
+      if (conversations.length > 0) {
+        setSearchParams({ nguoiDung: String(conversations[0].maNguoiKia) }, { replace: true });
+      } else {
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [conversations, loading, selectedId, setSearchParams]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      return;
+    }
+
+    setConversations(current => current.map(conversation => (
+      String(conversation.maNguoiKia) === String(selectedId)
+        ? { ...conversation, chuaDoc: 0 }
+        : conversation
+    )));
+    emitConversationRead(selectedId);
+  }, [selectedId]);
+
   const filteredConversations = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) {
@@ -117,14 +134,18 @@ export default function TinNhan() {
 
   const selectedConversation = conversations.find(item => String(item.maNguoiKia) === selectedId) || null;
 
+  const handleConversationDeleted = partnerId => {
+    setConversations(current => current.filter(item => String(item.maNguoiKia) !== String(partnerId)));
+    setRefreshKey(value => value + 1);
+  };
+
   return (
     <div className="container page-wrapper">
-      <div className="messages-shell">
+      <div className="messages-shell messenger-surface">
         <aside className="messages-sidebar card">
           <div className="messages-sidebar-header">
             <div>
-              <h1>Tin nhắn</h1>
-              <p>Hiển thị toàn bộ cuộc trò chuyện theo kiểu hộp thư messenger.</p>
+              <h1>Messenger</h1>
             </div>
           </div>
 
@@ -154,19 +175,38 @@ export default function TinNhan() {
                     className={`message-thread ${active ? 'active' : ''}`}
                     onClick={() => setSearchParams({ nguoiDung: String(conversation.maNguoiKia) })}
                   >
-                    <img
-                      src={getAvatarUrl(conversation.tenNguoiKia, conversation.avatarNguoiKia)}
-                      alt={conversation.tenNguoiKia}
-                      className="avatar avatar-md"
-                    />
+                    <div className="thread-avatar-wrap">
+                      <img
+                        src={getAvatarUrl(conversation.tenNguoiKia, conversation.avatarNguoiKia)}
+                        alt={conversation.tenNguoiKia}
+                        className="avatar avatar-md"
+                      />
+                      <span className={`thread-presence ${conversation.online ? 'online' : 'offline'}`} />
+                    </div>
+
                     <div className="message-thread-body">
                       <div className="message-thread-top">
                         <strong>{conversation.tenNguoiKia}</strong>
                         <span>{formatConversationTime(conversation.thoiGian)}</span>
                       </div>
-                      <div className="message-thread-preview">
-                        {conversation.laTinCuaToi && !conversation.tamThoi ? 'Bạn: ' : ''}
-                        {conversation.tinNhanCuoi || 'Chưa có tin nhắn'}
+
+                      <div className="message-thread-preview-row">
+                        <div className="message-thread-preview">
+                          {conversation.laTinCuaToi && !conversation.tamThoi ? 'Bạn: ' : ''}
+                          {conversation.tinNhanCuoi || 'Chưa có tin nhắn'}
+                        </div>
+
+                        {conversation.chuaDoc > 0 && (
+                          <span className="thread-unread">{conversation.chuaDoc > 9 ? '9+' : conversation.chuaDoc}</span>
+                        )}
+                      </div>
+
+                      <div className="thread-status-line">
+                        {conversation.online
+                          ? 'Đang hoạt động'
+                          : conversation.lastActive
+                            ? `Hoạt động ${formatConversationTime(conversation.lastActive)}`
+                            : 'Offline'}
                       </div>
                     </div>
                   </button>
@@ -181,15 +221,16 @@ export default function TinNhan() {
             <div className="messages-panel-empty">
               <div className="messages-panel-icon">💬</div>
               <h2>Chọn một cuộc trò chuyện</h2>
-              <p>Danh sách hội thoại nằm bên trái để chuyển nhanh như messenger.</p>
+              <p>Danh sách hội thoại nằm bên trái để chuyển nhanh như Messenger.</p>
             </div>
           ) : (
             <ChatBox
-              maNguoiKia={selectedConversation.maNguoiKia}
-              tenNguoiKia={selectedConversation.tenNguoiKia}
-              avatarNguoiKia={selectedConversation.avatarNguoiKia}
+              key={selectedConversation.maNguoiKia}
+              conversation={selectedConversation}
               embedded
               fullHeight
+              onConversationDeleted={handleConversationDeleted}
+              onConversationRefresh={() => setRefreshKey(value => value + 1)}
             />
           )}
         </section>

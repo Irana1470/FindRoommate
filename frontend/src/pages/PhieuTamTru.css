@@ -43,7 +43,7 @@
 .phieu-list-card {
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: #fff;
+  background: var(--surface);
   overflow: hidden;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
@@ -53,6 +53,11 @@
   border-color: rgba(18, 53, 91, 0.35);
   box-shadow: 0 14px 30px rgba(18, 53, 91, 0.08);
   transform: translateY(-1px);
+}
+
+[data-theme='dark'] .phieu-brand-pill {
+  border-color: color-mix(in srgb, var(--primary) 30%, var(--border));
+  background: color-mix(in srgb, var(--primary-soft) 70%, transparent);
 }
 
 .phieu-list-item {

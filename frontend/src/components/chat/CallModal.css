@@ -1,0 +1,130 @@
+.call-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 13, 24, 0.72);
+  backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.call-modal {
+  width: min(760px, 100%);
+  background: linear-gradient(180deg, #0f172a, #172033);
+  color: #ecf4ff;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(5, 14, 30, 0.34);
+}
+
+.call-hero {
+  position: relative;
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+}
+
+.call-avatar-shell {
+  width: 148px;
+  height: 148px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 4px solid rgba(255, 255, 255, 0.16);
+}
+
+.call-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.call-info {
+  position: absolute;
+  left: 30px;
+  top: 28px;
+}
+
+.call-info h3 {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.call-info p {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.call-remote-video {
+  width: 100%;
+  min-height: 420px;
+  object-fit: cover;
+}
+
+.call-local-video {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  width: 180px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.call-local-video.hidden {
+  opacity: 0.3;
+}
+
+.call-controls {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px 22px 24px;
+}
+
+.call-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 18px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.call-btn.accept {
+  background: #26b36a;
+}
+
+.call-btn.reject {
+  background: #e05263;
+}
+
+.call-btn.neutral {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 640px) {
+  .call-hero {
+    min-height: 320px;
+  }
+
+  .call-info {
+    left: 18px;
+    top: 18px;
+  }
+
+  .call-info h3 {
+    font-size: 24px;
+  }
+
+  .call-local-video {
+    width: 120px;
+    right: 14px;
+    bottom: 14px;
+  }
+
+  .call-controls {
+    flex-wrap: wrap;
+  }
+}

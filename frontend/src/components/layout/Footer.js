@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container footer-inner">
         <div className="footer-brand">
           <div className="footer-logo">🏠 FindRoomMate</div>
-          <p>Nền tảng tìm bạn ở ghép & chia sẻ tiền phòng hàng đầu Việt Nam.</p>
+          <p>Nền tảng tìm bạn ở ghép & chia sẻ tiền phòng.</p>
         </div>
         <div className="footer-links">
           <h4>Dịch vụ</h4>

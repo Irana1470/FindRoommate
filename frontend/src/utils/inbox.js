@@ -1,3 +1,5 @@
+const CHAT_READ_EVENT = 'frm:chat-read';
+
 export const getAvatarUrl = (name, avatar, size = 64) => (
   avatar
   || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'U')}&background=12355B&color=fff&size=${size}`
@@ -33,3 +35,26 @@ export const formatConversationTime = value => {
 };
 
 export const sortByNewest = items => [...items].sort((a, b) => getTimestamp(b.thoiGian) - getTimestamp(a.thoiGian));
+
+export const emitConversationRead = partnerId => {
+  if (!partnerId || typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new CustomEvent(CHAT_READ_EVENT, {
+    detail: { partnerId: String(partnerId) },
+  }));
+};
+
+export const subscribeConversationRead = handler => {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const listener = event => {
+    handler?.(event.detail?.partnerId || null);
+  };
+
+  window.addEventListener(CHAT_READ_EVENT, listener);
+  return () => window.removeEventListener(CHAT_READ_EVENT, listener);
+};

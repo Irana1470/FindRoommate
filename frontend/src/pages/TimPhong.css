@@ -4,5 +4,8 @@
   gap: 16px;
 }
 
-.map-placeholder { background: linear-gradient(135deg, #EBF8FF, #BEE3F8); }
+.tim-phong-user-address {
+  grid-column: 1 / -1;
+}
+
 .phong-item:hover { transform: translateY(-2px); transition: transform .2s; }

@@ -1,8 +1,8 @@
 .navbar {
-  background: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(18, 53, 91, 0.08);
-  box-shadow: 0 10px 28px rgba(16, 36, 58, 0.06);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  box-shadow: var(--shadow);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -23,6 +23,13 @@
   font-weight: 900;
   color: var(--primary);
   text-decoration: none;
+}
+
+.navbar-brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .navbar-brand span { color: var(--secondary); }
@@ -52,8 +59,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid rgba(18, 53, 91, 0.1);
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   color: var(--primary);
   display: inline-flex;
   align-items: center;
@@ -109,7 +116,7 @@
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  background: rgba(255, 255, 255, 0.98);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   min-width: 220px;

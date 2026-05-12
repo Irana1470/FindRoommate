@@ -6,13 +6,33 @@ import useAuthStore from '../store/authStore';
 import { buildPhongAddress } from '../utils/location';
 import './ChiTietPhong.css';
 
-const fmt = n => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+const fmt = value => `${new Intl.NumberFormat('vi-VN').format(Number(value) || 0)} đ`;
 
-const createManualSplitForm = () => ({
-  tienPhong: '',
-  tienDichVu: '',
-  tienDien: '',
-  tienNuoc: '',
+const parseMoney = value => {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
+
+const clampNumberInput = value => {
+  if (value === '') return '';
+
+  const normalized = value.replace(',', '.');
+  if (!/^\d*\.?\d*$/.test(normalized)) {
+    return value;
+  }
+
+  return Math.max(Number.parseFloat(normalized) || 0, 0).toString();
+};
+
+const createManualSplitForm = phong => ({
+  tienPhong: parseMoney(phong?.giaTien),
+  tienDichVu: parseMoney(phong?.tienDichVu),
+  giaDien: parseMoney(phong?.tienDien),
+  soDien: '',
+  waterMode: 'meter',
+  giaNuoc: parseMoney(phong?.tienNuoc),
+  soNuoc: '',
+  tienNuocCoDinh: parseMoney(phong?.tienNuoc) ? String(parseMoney(phong?.tienNuoc)) : '',
   moTa: '',
 });
 
@@ -24,7 +44,7 @@ const DotIcon = () => (
   </svg>
 );
 
-const getStatusMeta = (trangThai) => {
+const getStatusMeta = trangThai => {
   if (trangThai === 'San sang') return { className: 'badge-success', label: 'Sẵn sàng' };
   if (trangThai === 'Da day') return { className: 'badge-danger', label: 'Đã đầy' };
   return { className: 'badge-warning', label: 'Bảo trì' };
@@ -33,7 +53,7 @@ const getStatusMeta = (trangThai) => {
 export default function ChiTietPhong() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const currentUser = useAuthStore(s => s.user);
+  const currentUser = useAuthStore(state => state.user);
 
   const [phong, setPhong] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -42,8 +62,10 @@ export default function ChiTietPhong() {
   const [yeuCaus, setYeuCaus] = useState([]);
   const [memberMenu, setMemberMenu] = useState(null);
   const [deletingPhong, setDeletingPhong] = useState(false);
-
-  const [manualSplitForm, setManualSplitForm] = useState(createManualSplitForm());
+  const [showApply, setShowApply] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [moTaYeuCau, setMoTaYeuCau] = useState('');
+  const [manualSplitForm, setManualSplitForm] = useState(() => createManualSplitForm());
   const [manualSplitLoading, setManualSplitLoading] = useState(false);
 
   const fetchChiTietPhong = useCallback(async () => {
@@ -66,6 +88,12 @@ export default function ChiTietPhong() {
     fetchChiTietPhong();
   }, [fetchChiTietPhong]);
 
+  useEffect(() => {
+    if (phong) {
+      setManualSplitForm(createManualSplitForm(phong));
+    }
+  }, [phong]);
+
   const fetchYeuCau = useCallback(async () => {
     try {
       const res = await yeuCauAPI.layCuaPhong(id);
@@ -87,8 +115,8 @@ export default function ChiTietPhong() {
       toast.success(chapNhan ? 'Đã chấp nhận yêu cầu' : 'Đã từ chối yêu cầu');
       await fetchYeuCau();
       await fetchChiTietPhong();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Thất bại');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Thất bại');
     }
   };
 
@@ -96,12 +124,12 @@ export default function ChiTietPhong() {
     try {
       await thanhToanAPI.chiaTien(id);
       toast.success('Đã chia tự động thành công');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Chia tự động thất bại');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Chia tự động thất bại');
     }
   };
 
-  const handleXoaThanhVien = async (maThanhVien) => {
+  const handleXoaThanhVien = async maThanhVien => {
     if (!window.confirm('Bạn có chắc muốn xóa thành viên này khỏi phòng không?')) return;
 
     try {
@@ -109,8 +137,8 @@ export default function ChiTietPhong() {
       toast.success('Đã xóa thành viên khỏi phòng');
       setMemberMenu(null);
       await fetchChiTietPhong();
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Xóa thành viên thất bại');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Xóa thành viên thất bại');
     }
   };
 
@@ -122,36 +150,66 @@ export default function ChiTietPhong() {
       await phongAPI.xoa(id);
       toast.success('Đã xóa phòng thành công');
       navigate('/quan-ly-phong');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Xóa phòng thất bại');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Xóa phòng thất bại');
     } finally {
       setDeletingPhong(false);
     }
   };
 
-  const handleChiaThuCong = async (event) => {
-    event.preventDefault();
-
-    if (!manualSplitForm.tienPhong || !manualSplitForm.tienDichVu ||
-        !manualSplitForm.tienDien || !manualSplitForm.tienNuoc) {
-      toast.error('Vui lòng nhập đầy đủ các khoản tiền');
+  const handleApply = async () => {
+    if (!currentUser) {
+      navigate('/dang-nhap');
       return;
     }
+
+    if (!currentUser.xacThuc) {
+      toast.error('Bạn cần xác thực CCCD trước khi gửi yêu cầu');
+      navigate('/xac-thuc');
+      return;
+    }
+
+    setApplying(true);
+    try {
+      await yeuCauAPI.gui({ maPhong: phong.maPhong, moTa: moTaYeuCau });
+      toast.success('Đã gửi yêu cầu tham gia');
+      setShowApply(false);
+      setMoTaYeuCau('');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Gửi yêu cầu thất bại');
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const handleManualSplitChange = (field, value) => {
+    setManualSplitForm(current => ({ ...current, [field]: value }));
+  };
+
+  const handleChiaThuCong = async event => {
+    event.preventDefault();
+
+    const tienPhong = parseMoney(manualSplitForm.tienPhong);
+    const tienDichVu = parseMoney(manualSplitForm.tienDichVu);
+    const tienDien = parseMoney(manualSplitForm.soDien) * parseMoney(manualSplitForm.giaDien);
+    const tienNuoc = manualSplitForm.waterMode === 'meter'
+      ? parseMoney(manualSplitForm.soNuoc) * parseMoney(manualSplitForm.giaNuoc)
+      : parseMoney(manualSplitForm.tienNuocCoDinh);
 
     setManualSplitLoading(true);
     try {
       await thanhToanAPI.chiaTienThuCong(id, {
-        tienPhong: parseFloat(manualSplitForm.tienPhong || 0),
-        tienDichVu: parseFloat(manualSplitForm.tienDichVu || 0),
-        tienDien: parseFloat(manualSplitForm.tienDien || 0),
-        tienNuoc: parseFloat(manualSplitForm.tienNuoc || 0),
+        tienPhong,
+        tienDichVu,
+        tienDien,
+        tienNuoc,
         moTa: manualSplitForm.moTa.trim(),
       });
 
       toast.success('Đã tạo hóa đơn chia tiền thủ công thành công!');
-      setManualSplitForm(createManualSplitForm());
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Chia tiền thủ công thất bại');
+      setManualSplitForm(createManualSplitForm(phong));
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Chia tiền thủ công thất bại');
     } finally {
       setManualSplitLoading(false);
     }
@@ -170,6 +228,16 @@ export default function ChiTietPhong() {
   const members = phong.danhSachThanhVien || [];
   const conCho = Math.max((phong.soNguoiToiDa || 0) - (phong.soNguoiHienTai || 0), 0);
   const status = getStatusMeta(phong.trangThai);
+  const isMember = members.some(member => member.maNguoiDung === currentUser?.maNguoiDung);
+  const canRequestJoin = !isOwner && !isMember && Boolean(phong.maPhong);
+  const tienDienTinhToan = parseMoney(manualSplitForm.soDien) * parseMoney(manualSplitForm.giaDien);
+  const tienNuocTinhToan = manualSplitForm.waterMode === 'meter'
+    ? parseMoney(manualSplitForm.soNuoc) * parseMoney(manualSplitForm.giaNuoc)
+    : parseMoney(manualSplitForm.tienNuocCoDinh);
+  const tongChiPhiThuCong = parseMoney(manualSplitForm.tienPhong)
+    + parseMoney(manualSplitForm.tienDichVu)
+    + tienDienTinhToan
+    + tienNuocTinhToan;
 
   return (
     <div className="container page-wrapper room-detail-page">
@@ -213,8 +281,8 @@ export default function ChiTietPhong() {
             <div className="room-detail-cost-grid">
               <div className="room-detail-cost-card"><span>Giá phòng</span><strong>{fmt(phong.giaTien)}/tháng</strong></div>
               <div className="room-detail-cost-card"><span>Tiền dịch vụ</span><strong>{fmt(phong.tienDichVu)}</strong></div>
-              <div className="room-detail-cost-card"><span>Tiền điện</span><strong>{fmt(phong.tienDien)}</strong></div>
-              <div className="room-detail-cost-card"><span>Tiền nước</span><strong>{fmt(phong.tienNuoc)}</strong></div>
+              <div className="room-detail-cost-card"><span>Giá điện cấu hình</span><strong>{fmt(phong.tienDien)}/số</strong></div>
+              <div className="room-detail-cost-card"><span>Cấu hình nước</span><strong>{fmt(phong.tienNuoc)}</strong></div>
             </div>
           </section>
 
@@ -250,7 +318,7 @@ export default function ChiTietPhong() {
                         <button
                           type="button"
                           className="room-detail-member-menu-trigger"
-                          onClick={() => setMemberMenu(prev => prev === member.maNguoiDung ? null : member.maNguoiDung)}
+                          onClick={() => setMemberMenu(prev => (prev === member.maNguoiDung ? null : member.maNguoiDung))}
                           aria-label="Mở menu thành viên"
                         >
                           <DotIcon />
@@ -332,56 +400,115 @@ export default function ChiTietPhong() {
                     <input
                       className="form-control"
                       value={manualSplitForm.moTa}
-                      onChange={e => setManualSplitForm(prev => ({ ...prev, moTa: e.target.value }))}
+                      onChange={event => handleManualSplitChange('moTa', event.target.value)}
                       placeholder="Ví dụ: Chia tiền tháng 5/2026"
                     />
                   </div>
                 </div>
 
-                <div className="room-detail-form-grid">
+                <div className="room-detail-form-grid room-detail-form-grid-fixed">
                   <div className="form-group">
                     <label className="form-label">Tiền phòng</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      value={manualSplitForm.tienPhong}
-                      onChange={e => setManualSplitForm(prev => ({ ...prev, tienPhong: e.target.value }))}
-                      required
-                    />
+                    <input className="form-control" value={fmt(manualSplitForm.tienPhong)} readOnly />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Tiền dịch vụ</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      value={manualSplitForm.tienDichVu}
-                      onChange={e => setManualSplitForm(prev => ({ ...prev, tienDichVu: e.target.value }))}
-                      required
-                    />
+                    <input className="form-control" value={fmt(manualSplitForm.tienDichVu)} readOnly />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Tiền điện</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      value={manualSplitForm.tienDien}
-                      onChange={e => setManualSplitForm(prev => ({ ...prev, tienDien: e.target.value }))}
-                      required
-                    />
+                </div>
+
+                <div className="room-detail-split-card-grid">
+                  <div className="room-detail-split-panel">
+                    <div className="room-detail-split-panel-title">Tiền điện</div>
+                    <div className="room-detail-inline-note">Giá điện: {fmt(manualSplitForm.giaDien)} / số</div>
+                    <div className="form-group">
+                      <label className="form-label">Nhập số điện tháng này</label>
+                      <input
+                        className="form-control"
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        inputMode="decimal"
+                        value={manualSplitForm.soDien}
+                        onChange={event => handleManualSplitChange('soDien', clampNumberInput(event.target.value))}
+                        placeholder="Mặc định 0"
+                      />
+                    </div>
+                    <div className="room-detail-total-line">
+                      <span>Thành tiền điện</span>
+                      <strong>{fmt(tienDienTinhToan)}</strong>
+                    </div>
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">Tiền nước</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      value={manualSplitForm.tienNuoc}
-                      onChange={e => setManualSplitForm(prev => ({ ...prev, tienNuoc: e.target.value }))}
-                      required
-                    />
+
+                  <div className="room-detail-split-panel">
+                    <div className="room-detail-split-panel-title">Tiền nước</div>
+                    <div className="room-detail-radio-group" role="radiogroup" aria-label="Kiểu tính tiền nước">
+                      <label className="room-detail-radio-option">
+                        <input
+                          type="radio"
+                          name="waterMode"
+                          value="meter"
+                          checked={manualSplitForm.waterMode === 'meter'}
+                          onChange={event => handleManualSplitChange('waterMode', event.target.value)}
+                        />
+                        <span>Tính theo số nước</span>
+                      </label>
+                      <label className="room-detail-radio-option">
+                        <input
+                          type="radio"
+                          name="waterMode"
+                          value="fixed"
+                          checked={manualSplitForm.waterMode === 'fixed'}
+                          onChange={event => handleManualSplitChange('waterMode', event.target.value)}
+                        />
+                        <span>Nhập tiền cố định</span>
+                      </label>
+                    </div>
+
+                    {manualSplitForm.waterMode === 'meter' ? (
+                      <>
+                        <div className="room-detail-inline-note">Giá nước: {fmt(manualSplitForm.giaNuoc)} / số</div>
+                        <div className="form-group">
+                          <label className="form-label">Nhập số nước tháng này</label>
+                          <input
+                            className="form-control"
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            inputMode="decimal"
+                            value={manualSplitForm.soNuoc}
+                            onChange={event => handleManualSplitChange('soNuoc', clampNumberInput(event.target.value))}
+                            placeholder="Mặc định 0"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <div className="form-group">
+                        <label className="form-label">Tiền nước tháng này</label>
+                        <input
+                          className="form-control"
+                          type="number"
+                          min="0"
+                          step="1"
+                          inputMode="decimal"
+                          value={manualSplitForm.tienNuocCoDinh}
+                          onChange={event => handleManualSplitChange('tienNuocCoDinh', clampNumberInput(event.target.value))}
+                          placeholder="Nhập tiền nước"
+                        />
+                      </div>
+                    )}
+
+                    <div className="room-detail-total-line">
+                      <span>Thành tiền nước</span>
+                      <strong>{fmt(tienNuocTinhToan)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="room-detail-manual-summary">
+                  <div className="room-detail-total-line">
+                    <span>Tổng tiền cần chia</span>
+                    <strong>{fmt(tongChiPhiThuCong)}</strong>
                   </div>
                 </div>
 
@@ -410,6 +537,39 @@ export default function ChiTietPhong() {
               </Link>
             </div>
           </section>
+
+          {canRequestJoin && (
+            <section className="card room-detail-owner-card room-detail-action-card">
+              <div className="card-header">Yêu cầu tham gia</div>
+              <div className="card-body">
+                {conCho > 0 ? (
+                  !showApply ? (
+                    <button className="btn btn-primary btn-block btn-lg" onClick={() => setShowApply(true)}>
+                      Gửi yêu cầu vào phòng này
+                    </button>
+                  ) : (
+                    <>
+                      <textarea
+                        className="form-control"
+                        rows={3}
+                        placeholder="Giới thiệu bản thân..."
+                        value={moTaYeuCau}
+                        onChange={event => setMoTaYeuCau(event.target.value)}
+                      />
+                      <button className="btn btn-primary btn-block" onClick={handleApply} disabled={applying}>
+                        {applying ? 'Đang gửi...' : 'Gửi yêu cầu'}
+                      </button>
+                      <button className="btn btn-secondary btn-block" onClick={() => setShowApply(false)}>
+                        Hủy
+                      </button>
+                    </>
+                  )
+                ) : (
+                  <div className="room-detail-member-empty">Phòng hiện đã đủ người.</div>
+                )}
+              </div>
+            </section>
+          )}
 
           {isOwner && (
             <section className="card room-detail-owner-card room-detail-action-card">

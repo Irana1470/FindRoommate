@@ -2,11 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { baiDangAPI, thongKeAPI } from '../services/api';
 import RoomCard from '../components/room/RoomCard';
+import useAuthStore from '../store/authStore';
 import './TrangChu.css';
 
 const dinhDangSo = value => new Intl.NumberFormat('vi-VN').format(value || 0);
 
 export default function TrangChu() {
+  const { token, user } = useAuthStore();
   const [baiDangMoi, setBaiDangMoi] = useState([]);
   const [thongKe, setThongKe] = useState({
     tongNguoiDung: 0,
@@ -19,20 +21,20 @@ export default function TrangChu() {
 
   useEffect(() => {
     baiDangAPI.layDanhSach({ page: 0, size: 6 })
-      .then(r => setBaiDangMoi(r.data.data?.content || []))
+      .then(response => setBaiDangMoi(response.data.data?.content || []))
       .catch(() => {});
 
     thongKeAPI.layTrangChu()
-      .then(r => {
-        if (r.data?.data) {
-          setThongKe(r.data.data);
+      .then(response => {
+        if (response.data?.data) {
+          setThongKe(response.data.data);
         }
       })
       .catch(() => {});
   }, []);
 
-  const handleSearch = e => {
-    e.preventDefault();
+  const handleSearch = event => {
+    event.preventDefault();
     navigate(`/bai-dang?tuKhoa=${encodeURIComponent(tuKhoa)}`);
   };
 
@@ -57,13 +59,13 @@ export default function TrangChu() {
               className="form-control"
               placeholder="Nhập khu vực, địa chỉ..."
               value={tuKhoa}
-              onChange={e => setTuKhoa(e.target.value)}
+              onChange={event => setTuKhoa(event.target.value)}
             />
-            <button type="submit" className="btn btn-primary btn-lg">🔍 Tìm phòng</button>
+            <button type="submit" className="btn btn-primary btn-lg">Tìm phòng</button>
           </form>
           <div className="hero-actions">
-            <Link to="/tao-bai-dang" className="btn btn-outline btn-lg">📝 Đăng tin tìm bạn ghép</Link>
-            <Link to="/tao-phong" className="btn btn-secondary btn-lg">🏠 Đăng phòng</Link>
+            <Link to="/tao-bai-dang" className="btn btn-outline btn-lg">Đăng tin tìm bạn ghép</Link>
+            <Link to="/tao-phong" className="btn btn-secondary btn-lg">Đăng phòng</Link>
           </div>
         </div>
       </section>
@@ -71,10 +73,10 @@ export default function TrangChu() {
       <section className="stats-section">
         <div className="container">
           <div className="grid-4">
-            {thongKeTrangChu.map(s => (
-              <div key={s.label} className="stat-card">
-                <div className="stat-value">{s.value}</div>
-                <div className="stat-label">{s.label}</div>
+            {thongKeTrangChu.map(item => (
+              <div key={item.label} className="stat-card">
+                <div className="stat-value">{item.value}</div>
+                <div className="stat-label">{item.label}</div>
               </div>
             ))}
           </div>
@@ -93,11 +95,11 @@ export default function TrangChu() {
               { icon: '💬', title: 'Chat trực tiếp', desc: 'Nhắn tin, trao đổi ngay trong app trước khi quyết định' },
               { icon: '🗺️', title: 'Bản đồ tích hợp', desc: 'Xem vị trí phòng, so sánh khoảng cách đến trường hoặc cơ quan' },
               { icon: '⭐', title: 'Đánh giá minh bạch', desc: 'Đánh giá bạn cùng phòng và chủ nhà sau khi ở' },
-            ].map(f => (
-              <div key={f.title} className="feature-card">
-                <div className="feature-icon">{f.icon}</div>
-                <h3>{f.title}</h3>
-                <p>{f.desc}</p>
+            ].map(feature => (
+              <div key={feature.title} className="feature-card">
+                <div className="feature-icon">{feature.icon}</div>
+                <h3>{feature.title}</h3>
+                <p>{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -114,16 +116,29 @@ export default function TrangChu() {
             <Link to="/bai-dang" className="btn btn-outline">Xem tất cả →</Link>
           </div>
           <div className="grid-3">
-            {baiDangMoi.map(bd => <RoomCard key={bd.maBaiDang} baiDang={bd} />)}
+            {baiDangMoi.map(baiDang => <RoomCard key={baiDang.maBaiDang} baiDang={baiDang} />)}
           </div>
         </div>
       </section>
 
       <section className="cta-section">
         <div className="container cta-content">
-          <h2>Sẵn sàng tìm bạn ở ghép?</h2>
-          <p>Đăng ký miễn phí ngay hôm nay và kết nối với hàng nghìn người.</p>
-          <Link to="/dang-ky" className="btn btn-primary btn-lg">Bắt đầu miễn phí</Link>
+          {token ? (
+            <>
+              <h2>{user?.hoTen ? `${user.hoTen}, sẵn sàng tìm bạn ở ghép?` : 'Sẵn sàng tìm bạn ở ghép?'}</h2>
+              <p>Tạo bài đăng mới hoặc mở hộp thư để kết nối nhanh với những người phù hợp.</p>
+              <div className="cta-actions">
+                <Link to="/tao-bai-dang" className="btn btn-primary btn-lg">Đăng bài tìm bạn ở ghép</Link>
+                <Link to="/tin-nhan" className="btn btn-outline btn-lg cta-outline-light">Mở tin nhắn</Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2>Sẵn sàng tìm bạn ở ghép?</h2>
+              <p>Đăng ký miễn phí ngay hôm nay và kết nối với hàng nghìn người.</p>
+              <Link to="/dang-ky" className="btn btn-primary btn-lg">Bắt đầu miễn phí</Link>
+            </>
+          )}
         </div>
       </section>
     </div>

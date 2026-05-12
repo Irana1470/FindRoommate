@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import RoomMap from '../components/map/RoomMap';
 import { addressAPI, phongAPI } from '../services/api';
 import { buildPhongAddress } from '../utils/location';
 import './TimPhong.css';
@@ -15,6 +16,7 @@ export default function TimPhong() {
     diaChi: '',
     soNguoi: '',
   });
+  const [userAddress, setUserAddress] = useState('');
   const [phongs, setPhongs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -98,6 +100,7 @@ export default function TimPhong() {
     setLoading(true);
 
     try {
+      // API fetch: lấy danh sách phòng theo bộ lọc hiện có của project.
       const params = {};
       if (filters.giaTienMin) params.giaTienMin = filters.giaTienMin;
       if (filters.giaTienMax) params.giaTienMax = filters.giaTienMax;
@@ -116,10 +119,20 @@ export default function TimPhong() {
     }
   };
 
+  const mapPosts = useMemo(() => phongs.map(phong => ({
+    id: phong.maPhong,
+    title: phong.title || `Phòng #${phong.maPhong}`,
+    address: phong.diaChi || '',
+    district: phong.quanHuyen || '',
+    city: phong.tinhThanh || '',
+  })), [phongs]);
+
   return (
     <div className="container page-wrapper">
       <h1 className="section-title">Lọc phòng nâng cao</h1>
-      <p className="section-subtitle">Tìm phòng theo tỉnh thành, quận huyện và các tiêu chí cụ thể của bạn</p>
+      <p className="section-subtitle">
+        Tìm phòng theo tỉnh thành, quận huyện, vị trí bản đồ và các tiêu chí cụ thể của bạn
+      </p>
 
       <form onSubmit={handleSearch} className="card" style={{ marginBottom: 28 }}>
         <div className="card-body">
@@ -136,8 +149,15 @@ export default function TimPhong() {
 
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Quận / Huyện</label>
-              <select className="form-control" value={selectedQuanHuyenCode} onChange={handleQuanHuyenChange} disabled={!selectedTinhThanhCode}>
-                <option value="">{selectedTinhThanhCode ? '-- Tất cả quận huyện --' : '-- Chọn tỉnh thành trước --'}</option>
+              <select
+                className="form-control"
+                value={selectedQuanHuyenCode}
+                onChange={handleQuanHuyenChange}
+                disabled={!selectedTinhThanhCode}
+              >
+                <option value="">
+                  {selectedTinhThanhCode ? '-- Tất cả quận huyện --' : '-- Chọn tỉnh thành trước --'}
+                </option>
                 {quanHuyens.map(item => (
                   <option key={item.code} value={item.code}>{item.name}</option>
                 ))}
@@ -187,6 +207,16 @@ export default function TimPhong() {
                 onChange={event => set('soNguoi', event.target.value)}
               />
             </div>
+
+            <div className="form-group tim-phong-user-address" style={{ marginBottom: 0 }}>
+              <label className="form-label">Nhập địa chỉ của bạn (không bắt buộc)</label>
+              <input
+                className="form-control"
+                placeholder="VD: Hồ Xuân Hương, Đà Lạt"
+                value={userAddress}
+                onChange={event => setUserAddress(event.target.value)}
+              />
+            </div>
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ marginTop: 16 }} disabled={loading}>
@@ -195,15 +225,9 @@ export default function TimPhong() {
         </div>
       </form>
 
-      <div className="map-placeholder card" style={{ marginBottom: 28 }}>
-        <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>ĐỊA GIỚI</div>
-          <h3 style={{ marginTop: 12 }}>Bộ lọc địa giới hành chính</h3>
-          <p style={{ color: 'var(--text-muted)', marginTop: 8 }}>
-            Tỉnh thành và quận huyện đang được nạp từ Vietnam Provinces API theo `openapi.json`.
-          </p>
-        </div>
-      </div>
+      {searched && (
+        <RoomMap posts={mapPosts} userAddress={userAddress} />
+      )}
 
       {searched && (
         <>
@@ -218,12 +242,16 @@ export default function TimPhong() {
                 <div key={phong.maPhong} className="card phong-item">
                   <div className="card-body">
                     <h4 style={{ fontWeight: 700, marginBottom: 8 }}>{phong.title}</h4>
-                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>{fmt(phong.giaTien)}/thang</div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
+                      {fmt(phong.giaTien)}/tháng
+                    </div>
                     <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 6 }}>
                       Địa chỉ: {buildPhongAddress(phong) || 'Chưa cập nhật địa chỉ'}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
-                      <span style={{ fontSize: 13 }}>Ở hiện tại: {phong.soNguoiHienTai}/{phong.soNguoiToiDa} người</span>
+                      <span style={{ fontSize: 13 }}>
+                        Ở hiện tại: {phong.soNguoiHienTai}/{phong.soNguoiToiDa} người
+                      </span>
                       <span className={`badge ${phong.trangThai === 'San sang' ? 'badge-success' : 'badge-danger'}`}>
                         {phong.trangThai === 'San sang' ? 'Còn trống' : 'Đã đầy'}
                       </span>

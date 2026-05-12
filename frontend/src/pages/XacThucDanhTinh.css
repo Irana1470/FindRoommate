@@ -16,3 +16,17 @@
 .xacthuc-result { text-align: center; padding: 20px 0; }
 .result-icon { font-size: 64px; margin-bottom: 12px; }
 .result-info { background: var(--bg); border-radius: var(--radius-sm); padding: 20px; text-align: left; margin-top: 20px; }
+.xacthuc-message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 16px 0 20px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  line-height: 1.5;
+}
+.xacthuc-message-error {
+  color: #8a1f1f;
+  background: #fff1f1;
+  border: 1px solid #f2b8b8;
+}

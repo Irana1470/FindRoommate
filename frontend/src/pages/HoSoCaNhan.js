@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { nguoiDungAPI } from '../services/api';
+import { danhGiaAPI, nguoiDungAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import './HoSoCaNhan.css';
 
 const fmt = (n) => 
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
+
+const formatDate = value => (value ? new Date(value).toLocaleDateString('vi-VN') : '');
+const renderStars = value => `${'★'.repeat(value || 0)}${'☆'.repeat(5 - (value || 0))}`;
 
 export default function HoSoCaNhan() {
   const { user, layThongTinToi } = useAuthStore();
@@ -14,6 +17,8 @@ export default function HoSoCaNhan() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ hoTen: '', soDienThoai: '' });
   const [saving, setSaving] = useState(false);
+  const [receivedReviews, setReceivedReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
 
   // Memoize form initial value
   const initialForm = useMemo(() => ({
@@ -25,6 +30,37 @@ export default function HoSoCaNhan() {
   useEffect(() => {
     setForm(initialForm);
   }, [initialForm]);
+
+  useEffect(() => {
+    if (!user?.maNguoiDung) {
+      setReceivedReviews([]);
+      return undefined;
+    }
+
+    let active = true;
+    setLoadingReviews(true);
+
+    danhGiaAPI.layNhanDuoc()
+      .then(response => {
+        if (active) {
+          setReceivedReviews(response.data.data || []);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setReceivedReviews([]);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoadingReviews(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.maNguoiDung]);
 
   // ==================== HANDLERS (được memoize) ====================
   const handleSave = useCallback(async () => {
@@ -213,7 +249,42 @@ export default function HoSoCaNhan() {
             </div>
           </div>
 
-          {/* Hành động nhanh */}
+          {/* Đánh giá nhận được */}
+          <div className="card" style={{ marginTop: 20 }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>⭐ Đánh giá về bạn</span>
+              <Link to="/danh-gia" className="btn btn-outline btn-sm">Xem tất cả</Link>
+            </div>
+            <div className="card-body">
+              {loadingReviews ? (
+                <div className="review-empty">Đang tải đánh giá...</div>
+              ) : receivedReviews.length === 0 ? (
+                <div className="review-empty">Bạn chưa nhận được đánh giá nào.</div>
+              ) : (
+                <div className="review-list">
+                  {receivedReviews.slice(0, 3).map(review => (
+                    <div key={review.maDanhGia} className="review-item">
+                      <div className="review-top">
+                        {review.maNguoiDanhGia ? (
+                          <Link to={`/nguoi-dung/${review.maNguoiDanhGia}`}>
+                            <strong>{review.tenNguoiDanhGia || 'Người dùng ẩn danh'}</strong>
+                          </Link>
+                        ) : (
+                          <strong>{review.tenNguoiDanhGia || 'Người dùng ẩn danh'}</strong>
+                        )}
+                        <span className="stars">{renderStars(review.soSao)}</span>
+                      </div>
+                      <p style={{ color: 'var(--text-muted)', margin: '8px 0 0' }}>
+                        {review.moTa || 'Không có nhận xét chi tiết'}
+                      </p>
+                      <div className="review-date">{formatDate(review.ngayDanhGia)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="card" style={{ marginTop: 20 }}>
             <div className="card-header">⚡ Hành động nhanh</div>
             <div className="card-body">

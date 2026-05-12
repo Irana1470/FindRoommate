@@ -70,7 +70,11 @@
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #f8fbff;
+  background: var(--surface-alt);
+}
+
+[data-theme='dark'] .phong-card-title-row h3 {
+  color: var(--text);
 }
 
 .phong-meta-item span {

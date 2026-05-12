@@ -2,15 +2,53 @@
 .preset-amounts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .preset-btn {
   padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm);
-  background: #fff; cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s;
+  background: var(--surface); cursor: pointer; font-weight: 600; font-size: 14px; transition: all .2s;
 }
 .preset-btn:hover, .preset-btn.active { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
 .hoadon-item .card-body { padding: 18px 24px; }
 .hoadon-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .hoadon-title { font-weight: 700; font-size: 16px; }
 .hoadon-amount { font-size: 20px; font-weight: 800; color: var(--primary); }
+.wallet-transaction-list { display: flex; flex-direction: column; gap: 14px; }
+.wallet-transaction-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 16px 18px;
+}
+.wallet-transaction-main { display: flex; flex-direction: column; gap: 8px; }
+.wallet-transaction-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.wallet-transaction-amount { font-size: 18px; font-weight: 800; }
+.wallet-transaction-amount.in { color: #1e6b4c; }
+.wallet-transaction-amount.out { color: #8d2635; }
+.wallet-transaction-description { color: var(--text); }
+.wallet-transaction-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.wallet-transaction-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 20px 0;
+}
+
+[data-theme='dark'] .wallet-transaction-amount.in { color: #6fe0ad; }
+[data-theme='dark'] .wallet-transaction-amount.out { color: #ffb6c3; }
 @media (max-width: 768px) {
   .balance-amount { font-size: 32px; }
   .hoadon-item .card-body { padding: 16px; }
   .hoadon-row { flex-direction: column; }
+  .wallet-transaction-title-row,
+  .wallet-transaction-meta { align-items: flex-start; flex-direction: column; }
 }

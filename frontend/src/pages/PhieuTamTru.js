@@ -348,10 +348,10 @@ export default function PhieuTamTru() {
         setDefaultForm(nextDefaultForm);
         setForm(nextDefaultForm);
         if (phieuResult.status !== 'fulfilled') {
-          toast.error('Khong tai duoc danh sach phieu tam tru');
+          toast.error('Không tải được danh sách phiếu tạm trú');
         }
         if (defaultResult.status !== 'fulfilled' && !currentUser) {
-          toast.error('Khong tai duoc du lieu mac dinh cho phieu tam tru');
+          toast.error('Không tải được dữ liệu mặc định cho phiếu tạm trú');
         }
       } catch (error) {
         const fallbackForm = mergeWithUserFallback(createInitialForm(currentUser), currentUser);
@@ -441,7 +441,7 @@ export default function PhieuTamTru() {
       return { error: 'Số định danh cá nhân phải gồm từ 9 đến 12 chữ số' };
     }
     if (!isValidOptionalName(tenChuHo)) {
-      return { error: 'Ten chu ho phai tu 2 den 100 ky tu va khong duoc chua so' };
+      return { error: 'Tên chủ hộ phải từ 2 đến 100 ký tự và không được chứa số' };
     }
     if (!isValidCitizenId(soDinhDanhChuHo)) {
       return { error: 'Số định danh của chủ hộ phải gồm từ 9 đến 12 chữ số' };
@@ -491,25 +491,25 @@ export default function PhieuTamTru() {
     };
 
     if (!isValidOptionalName(payload.hoTen)) {
-      return { error: 'Ho ten phai tu 2 den 100 ky tu va khong duoc chua so' };
+      return { error: 'Họ tên phải từ 2 đến 100 ký tự và không được chứa số' };
     }
     if (!isValidPhone(payload.soDienThoai)) {
-      return { error: 'So dien thoai phai gom 10 hoac 11 chu so' };
+      return { error: 'Số điện thoại phải gồm 10 hoặc 11 chữ số' };
     }
     if (!isValidCitizenId(payload.soCanCuocCongDan)) {
-      return { error: 'So dinh danh ca nhan phai gom tu 9 den 12 chu so' };
+      return { error: 'Số định danh cá nhân phải gồm từ 9 đến 12 chữ số' };
     }
     if (!isValidOptionalName(payload.tenChuHo)) {
-      return { error: 'Ten chu ho phai tu 2 den 100 ky tu va khong duoc chua so' };
+      return { error: 'Tên chủ hộ phải từ 2 đến 100 ký tự và không được chứa số' };
     }
     if (!isValidCitizenId(payload.soDinhDanhChuHo)) {
-      return { error: 'So dinh danh cua chu ho phai gom tu 9 den 12 chu so' };
+      return { error: 'Số định danh của chủ hộ phải gồm từ 9 đến 12 chữ số' };
     }
     if (!isValidEmail(payload.email)) {
-      return { error: 'Email khong hop le' };
+      return { error: 'Email không hợp lệ' };
     }
     if (payload.ngaySinh && new Date(payload.ngaySinh) > new Date()) {
-      return { error: 'Ngay sinh khong duoc lon hon ngay hien tai' };
+      return { error: 'Ngày sinh không được lớn hơn ngày hiện tại' };
     }
 
     return { payload };
