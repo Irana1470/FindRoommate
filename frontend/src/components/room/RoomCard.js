@@ -30,19 +30,17 @@ export default function RoomCard({ baiDang }) {
       onKeyDown={handleKeyDown}
     >
       {thumb ? (
-        <div style={{ position: 'relative' }}>
+        <div className="room-card-media">
           {hasVideo ? (
             <video src={thumb} className="room-card-img" muted playsInline preload="metadata" />
           ) : (
             <img src={thumb} alt={baiDang.moTa} className="room-card-img" />
           )}
           {hasVideo && (
-            <span
-              className="badge badge-dark"
-              style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0, 0, 0, 0.7)' }}
-            >
-              Video
-            </span>
+            <>
+              <div className="room-card-media-overlay" aria-hidden="true" />
+              <span className="room-card-video-badge">Video</span>
+            </>
           )}
         </div>
       ) : (
