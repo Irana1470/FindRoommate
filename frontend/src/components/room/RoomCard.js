@@ -1,14 +1,21 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { baiDangAPI } from '../../services/api';
+import ContentActionMenu from '../report/ContentActionMenu';
+import ReportContentModal from '../report/ReportContentModal';
+import useAuthStore from '../../store/authStore';
 
 const formatCurrency = n =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
 
 export default function RoomCard({ baiDang }) {
   const navigate = useNavigate();
+  const currentUser = useAuthStore(state => state.user);
   const imgs = baiDang.images || [];
   const thumb = baiDang.video || imgs[0] || null;
   const hasVideo = Boolean(baiDang.video);
+  const [showReportModal, setShowReportModal] = React.useState(false);
 
   const openBaiDang = () => {
     navigate(`/bai-dang/${baiDang.maBaiDang}`);
@@ -29,6 +36,26 @@ export default function RoomCard({ baiDang }) {
       onClick={openBaiDang}
       onKeyDown={handleKeyDown}
     >
+      {currentUser?.maNguoiDung !== baiDang.maNguoiDang && (
+        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 3 }}>
+          <ContentActionMenu
+            items={[
+              {
+                label: 'Báo cáo bài viết',
+                danger: true,
+                onClick: () => {
+                  if (!currentUser) {
+                    navigate('/dang-nhap');
+                    return;
+                  }
+                  setShowReportModal(true);
+                },
+              },
+            ]}
+          />
+        </div>
+      )}
+
       {thumb ? (
         <div className="room-card-media">
           {hasVideo ? (
@@ -72,6 +99,17 @@ export default function RoomCard({ baiDang }) {
           </span>
         </div>
       </div>
+
+      <ReportContentModal
+        open={showReportModal}
+        title="Báo cáo bài viết"
+        targetLabel={baiDang.moTa || `Bài đăng #${baiDang.maBaiDang}`}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={async payload => {
+          await baiDangAPI.baoCao(baiDang.maBaiDang, payload);
+          toast.success('Đã gửi báo cáo bài viết');
+        }}
+      />
     </article>
   );
 }

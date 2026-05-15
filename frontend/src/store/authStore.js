@@ -2,12 +2,33 @@ import { create } from 'zustand';
 import { authAPI, nguoiDungAPI } from '../services/api';
 
 const getErrorMessage = err => {
-  if (err.response?.data?.message) {
-    return err.response.data.message;
+  const responseData = err.response?.data;
+
+  if (typeof responseData?.message === 'string' && responseData.message.trim()) {
+    return responseData.message;
+  }
+
+  if (typeof responseData === 'string' && responseData.trim()) {
+    try {
+      const parsed = JSON.parse(responseData);
+      if (typeof parsed?.message === 'string' && parsed.message.trim()) {
+        return parsed.message;
+      }
+    } catch {
+      return responseData;
+    }
+  }
+
+  if (typeof Blob !== 'undefined' && responseData instanceof Blob) {
+    return 'Frontend nhận được phản hồi lỗi không đọc được từ backend. Hãy mở tab Network để xem chi tiết.';
   }
 
   if (err.code === 'ERR_NETWORK' || !err.response) {
     return 'Không thể kết nối tới backend. Hãy đảm bảo backend đang chạy tại http://localhost:8080';
+  }
+
+  if (typeof err.message === 'string' && err.message.trim()) {
+    return err.message;
   }
 
   return 'Có lỗi xảy ra, vui lòng thử lại';

@@ -26,10 +26,13 @@ import QuanLyBaiDang from './pages/QuanLyBaiDang';
 import ThanhToan from './pages/ThanhToan';
 import HoaDonCuaToi from './pages/HoaDonCuaToi';
 import DanhGia from './pages/DanhGia';
+import BanBe from './pages/BanBe';
 import PhieuTamTru from './pages/PhieuTamTru';
 import YeuCau from './pages/YeuCau';
 import TinNhan from './pages/TinNhan';
 import AdminBaoCaoHoiThoai from './pages/AdminBaoCaoHoiThoai';
+import AdminBaoCaoNoiDung from './pages/AdminBaoCaoNoiDung';
+import AdminNguoiDung from './pages/AdminNguoiDung';
 
 import './styles/global.css';
 
@@ -97,10 +100,13 @@ function AppShell() {
           <Route path="/thanh-toan" element={<PrivateRoute><ThanhToan /></PrivateRoute>} />
           <Route path="/hoa-don" element={<PrivateRoute><HoaDonCuaToi /></PrivateRoute>} />
           <Route path="/danh-gia" element={<PrivateRoute><DanhGia /></PrivateRoute>} />
+          <Route path="/ban-be" element={<PrivateRoute><BanBe /></PrivateRoute>} />
           <Route path="/tam-tru" element={<PrivateRoute><PhieuTamTru /></PrivateRoute>} />
           <Route path="/yeu-cau" element={<PrivateRoute><YeuCau /></PrivateRoute>} />
           <Route path="/tin-nhan" element={<PrivateRoute><TinNhan /></PrivateRoute>} />
           <Route path="/admin/bao-cao-chat" element={<AdminRoute><AdminBaoCaoHoiThoai /></AdminRoute>} />
+          <Route path="/admin/bao-cao-noi-dung" element={<AdminRoute><AdminBaoCaoNoiDung /></AdminRoute>} />
+          <Route path="/admin/nguoi-dung" element={<AdminRoute><AdminNguoiDung /></AdminRoute>} />
         </Routes>
       </main>
       <Footer />

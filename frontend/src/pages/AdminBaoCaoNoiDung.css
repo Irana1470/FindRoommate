@@ -1,0 +1,126 @@
+.admin-content-report-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-content-report-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-content-report-header h1 {
+  margin: 0 0 8px;
+}
+
+.admin-content-report-header p,
+.admin-content-report-card-top p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.admin-content-report-empty {
+  padding: 28px;
+  text-align: center;
+}
+
+.admin-content-report-list {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-content-report-card {
+  padding: 22px;
+}
+
+.admin-content-report-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.admin-content-report-card-top h2 {
+  margin: 10px 0 8px;
+}
+
+.admin-content-report-meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-content-report-target {
+  font-weight: 600;
+  margin-bottom: 8px !important;
+}
+
+.admin-content-report-users {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-content-report-user {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.admin-content-user-link {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.admin-content-report-user div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-content-report-user span {
+  color: var(--text-muted);
+}
+
+.admin-content-state.active {
+  color: #067647;
+}
+
+.admin-content-state.warning {
+  color: #b54708;
+}
+
+.admin-content-state.danger {
+  color: #b42318;
+}
+
+.admin-content-report-note {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-content-report-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+@media (max-width: 768px) {
+  .admin-content-report-users {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-content-report-card-top {
+    flex-direction: column;
+  }
+}

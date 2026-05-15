@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useDropzone } from 'react-dropzone';
 import toast from 'react-hot-toast';
+import UploadMedia from '../components/UploadMedia';
 import { addressAPI, baiDangAPI, phongAPI } from '../services/api';
 import './TaoBaiDang.css';
 
@@ -29,6 +29,7 @@ export default function TaoBaiDang() {
   const [videoPreview, setVideoPreview] = useState('');
   const [existingVideo, setExistingVideo] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [submitStage, setSubmitStage] = useState('');
   const [loadingPost, setLoadingPost] = useState(isEditMode);
   const [loadingTinhThanh, setLoadingTinhThanh] = useState(true);
   const [loadingQuanHuyen, setLoadingQuanHuyen] = useState(false);
@@ -38,57 +39,9 @@ export default function TaoBaiDang() {
   const [quanHuyens, setQuanHuyens] = useState([]);
   const [selectedTinhThanhCode, setSelectedTinhThanhCode] = useState('');
   const [selectedQuanHuyenCode, setSelectedQuanHuyenCode] = useState('');
+  const phongDuocChon = phongSoHuu.find(item => String(item.maPhong) === String(form.maPhong));
 
   const set = (key, value) => setForm(current => ({ ...current, [key]: value }));
-
-  const appendMedia = useCallback(acceptedFiles => {
-    if (!acceptedFiles.length) {
-      return;
-    }
-
-    const imageFiles = acceptedFiles.filter(file => file.type?.startsWith('image/'));
-    const videoFiles = acceptedFiles.filter(file => file.type?.startsWith('video/'));
-
-    if (imageFiles.length > 0) {
-      setFiles(prev => [...prev, ...imageFiles]);
-      setPreviews(prev => [...prev, ...imageFiles.map(file => URL.createObjectURL(file))]);
-    }
-
-    if (videoFiles.length > 0) {
-      const nextVideo = videoFiles[0];
-      if (videoPreview) {
-        URL.revokeObjectURL(videoPreview);
-      }
-      setVideoFile(nextVideo);
-      setVideoPreview(URL.createObjectURL(nextVideo));
-
-      if (videoFiles.length > 1) {
-        toast('Chỉ hỗ trợ 1 video cho mỗi bài đăng, mình đã giữ video đầu tiên.');
-      } else if (acceptedFiles.length > 1 && imageFiles.length > 0) {
-        toast.success('Đã thêm ảnh và video vào bài đăng.');
-      }
-    }
-  }, [videoPreview]);
-
-  const onDrop = useCallback(accepted => {
-    appendMedia(accepted);
-  }, [appendMedia]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': [],
-      'video/*': [],
-    },
-    multiple: true,
-  });
-
-  useEffect(() => () => {
-    previews.forEach(url => URL.revokeObjectURL(url));
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
-    }
-  }, [previews, videoPreview]);
 
   useEffect(() => {
     let active = true;
@@ -282,13 +235,25 @@ export default function TaoBaiDang() {
     set('quanHuyen', selectedQuanHuyen?.name || '');
   };
 
-  const removeVideo = () => {
-    if (videoPreview) {
-      URL.revokeObjectURL(videoPreview);
+  const handlePhongChange = event => {
+    const nextMaPhong = event.target.value;
+    const selectedPhong = phongSoHuu.find(item => String(item.maPhong) === nextMaPhong);
+
+    if (!selectedPhong) {
+      set('maPhong', '');
+      return;
     }
-    setVideoFile(null);
-    setVideoPreview('');
-    setExistingVideo('');
+
+    setForm(current => ({
+      ...current,
+      maPhong: nextMaPhong,
+      moTa: selectedPhong.title || current.moTa,
+      noiDung: selectedPhong.moTa || current.noiDung,
+      giaTien: selectedPhong.giaTien != null ? String(selectedPhong.giaTien) : current.giaTien,
+      tinhThanh: selectedPhong.tinhThanh || current.tinhThanh,
+      quanHuyen: selectedPhong.quanHuyen || current.quanHuyen,
+      diaChi: selectedPhong.diaChi || current.diaChi,
+    }));
   };
 
   const handleSubmit = async event => {
@@ -300,6 +265,7 @@ export default function TaoBaiDang() {
     }
 
     setSubmitting(true);
+    setSubmitStage('saving');
 
     try {
       const payload = {
@@ -327,12 +293,19 @@ export default function TaoBaiDang() {
       }
 
       if (files.length > 0 || videoFile) {
+        setSubmitStage('uploading');
         const fd = new FormData();
         files.forEach(file => fd.append('files', file));
         if (videoFile) {
           fd.append('files', videoFile);
         }
-        await baiDangAPI.uploadMedia(maBaiDang, fd);
+        try {
+          await baiDangAPI.uploadMedia(maBaiDang, fd);
+        } catch (uploadError) {
+          toast.error(uploadError.response?.data?.message || 'Da luu bai dang, nhung tai media that bai. Vui long thu lai.');
+          navigate(`/bai-dang/${maBaiDang}`);
+          return;
+        }
       }
 
       toast.success(isEditMode ? 'Cập nhật bài đăng thành công!' : 'Đăng bài thành công!');
@@ -341,6 +314,7 @@ export default function TaoBaiDang() {
       toast.error(error.response?.data?.message || (isEditMode ? 'Cập nhật bài đăng thất bại' : 'Đăng bài thất bại'));
     } finally {
       setSubmitting(false);
+      setSubmitStage('');
     }
   };
 
@@ -383,7 +357,7 @@ export default function TaoBaiDang() {
                   <select
                     className="form-control"
                     value={form.maPhong}
-                    onChange={event => set('maPhong', event.target.value)}
+                    onChange={handlePhongChange}
                     disabled={loadingPhong}
                   >
                     <option value="">
@@ -398,6 +372,11 @@ export default function TaoBaiDang() {
                   <div className="form-note">
                     Chọn một phòng bạn đang sở hữu để người xem có thể gửi yêu cầu tham gia trực tiếp từ bài đăng.
                   </div>
+                  {phongDuocChon && (
+                    <div className="form-note">
+                      Thong tin bai dang da duoc do tu phong <strong>{phongDuocChon.title}</strong>. Ban van co the chinh tay truoc khi luu.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -478,105 +457,29 @@ export default function TaoBaiDang() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Ảnh và video</label>
-                <div {...getRootProps()} className={`dropzone ${isDragActive ? 'active' : ''}`}>
-                  <input {...getInputProps()} />
-                  <div className="dropzone-content">
-                    <span style={{ fontSize: 40 }}>📸</span>
-                    <p>{isDragActive ? 'Thả ảnh hoặc video vào đây...' : 'Kéo thả hoặc click để chọn ảnh và video'}</p>
-                    <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>Hỗ trợ JPG, PNG, WEBP và 1 video MP4/MOV/WebM</p>
-                  </div>
-                </div>
-
-                {isEditMode && (existingImages.length > 0 || existingVideo) && (
-                  <div className="media-existing-group">
-                    <div className="form-note">Media hiện tại của bài đăng</div>
-                    {existingImages.length > 0 && (
-                      <div className="preview-grid">
-                        {existingImages.map((src, index) => (
-                          <div key={`${src}-${index}`} className="preview-item preview-item-static">
-                            <img src={src} alt="" />
-                            <button
-                              type="button"
-                              className="preview-remove"
-                              onClick={() => {
-                                setExistingImages(current => current.filter((_, itemIndex) => itemIndex !== index));
-                              }}
-                            >
-                              x
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {existingVideo && !videoPreview && (
-                      <div className="video-preview-card">
-                        <video src={existingVideo} controls className="video-preview-player" />
-                        <button
-                          type="button"
-                          className="preview-remove preview-remove-video"
-                          onClick={removeVideo}
-                        >
-                          x
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {previews.length > 0 && (
-                  <div className="media-preview-group">
-                    <div className="form-note">Ảnh mới sẽ được thêm vào bộ ảnh hiện tại.</div>
-                    <div className="preview-grid">
-                      {previews.map((src, index) => (
-                        <div key={index} className="preview-item">
-                          <img src={src} alt="" />
-                          <button
-                            type="button"
-                            className="preview-remove"
-                            onClick={() => {
-                              URL.revokeObjectURL(previews[index]);
-                              setFiles(current => current.filter((_, itemIndex) => itemIndex !== index));
-                              setPreviews(current => current.filter((_, itemIndex) => itemIndex !== index));
-                            }}
-                          >
-                            x
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {videoPreview && (
-                  <div className="media-preview-group">
-                    <div className="form-note">
-                      {videoPreview ? 'Video mới sẽ thay thế video hiện tại.' : 'Video hiện tại của bài đăng.'}
-                    </div>
-                    <div className="video-preview-card">
-                      <video
-                        src={videoPreview}
-                        controls
-                        className="video-preview-player"
-                      />
-                      {videoPreview && (
-                        <button
-                          type="button"
-                          className="preview-remove preview-remove-video"
-                          onClick={removeVideo}
-                        >
-                          x
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <UploadMedia
+                previews={previews}
+                files={files}
+                setFiles={setFiles}
+                setPreviews={setPreviews}
+                videoPreview={videoPreview}
+                setVideoPreview={setVideoPreview}
+                videoFile={videoFile}
+                setVideoFile={setVideoFile}
+                existingImages={existingImages}
+                setExistingImages={setExistingImages}
+                existingVideo={existingVideo}
+                setExistingVideo={setExistingVideo}
+                isEditMode={isEditMode}
+              />
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <button type="submit" className="btn btn-primary btn-lg" disabled={submitting} style={{ flex: 1 }}>
-                  {submitting ? 'Đang xử lý...' : isEditMode ? 'Lưu thay đổi' : 'Đăng bài'}
+                  {submitting
+                    ? submitStage === 'uploading'
+                      ? 'Dang tai media...'
+                      : 'Dang luu bai dang...'
+                    : isEditMode ? 'Lưu thay đổi' : 'Đăng bài'}
                 </button>
                 <button type="button" className="btn btn-secondary btn-lg" onClick={() => navigate(-1)}>Hủy</button>
               </div>

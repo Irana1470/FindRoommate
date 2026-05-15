@@ -66,12 +66,43 @@
 .chitiet-address { color:var(--text-muted); font-size:15px; margin-bottom:20px; }
 .chitiet-content h3 { font-size:17px; font-weight:700; margin-bottom:8px; margin-top:20px; }
 .chitiet-content p { color:var(--text-muted); line-height:1.8; }
+.chitiet-phong-info {
+  margin-top: 20px;
+}
+.chitiet-phong-info h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.chitiet-phong-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-alt);
+}
+.chitiet-phong-card-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.chitiet-phong-card-main strong {
+  color: var(--secondary);
+}
+.chitiet-phong-card-main span {
+  color: var(--text-muted);
+  font-size: 14px;
+}
 .poster-card { position:sticky; top:80px; }
 .poster-info { display:flex; align-items:center; gap:14px; padding:16px 0; border-bottom:1px solid var(--border); }
 .info-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); font-size:14px; }
 @media (max-width:900px) {
   .chitiet-layout { grid-template-columns:1fr; }
   .poster-card { position:static; }
+  .chitiet-phong-card { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width:640px) {
   .gallery-nav {

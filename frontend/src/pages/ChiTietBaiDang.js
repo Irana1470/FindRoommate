@@ -3,6 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { baiDangAPI, yeuCauAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
+import ContentActionMenu from '../components/report/ContentActionMenu';
+import ReportContentModal from '../components/report/ReportContentModal';
 import './ChiTietBaiDang.css';
 
 const fmt = n => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n);
@@ -17,6 +19,7 @@ export default function ChiTietBaiDang() {
   const [moTaYeuCau, setMoTaYeuCau] = useState('');
   const [showApply, setShowApply] = useState(false);
   const [mediaIdx, setMediaIdx] = useState(0);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     baiDangAPI.layChiTiet(id)
@@ -87,6 +90,7 @@ export default function ChiTietBaiDang() {
   };
 
   if (loading) return <div className="spinner" />;
+
   if (!bd) {
     return (
       <div className="container page-wrapper">
@@ -154,7 +158,27 @@ export default function ChiTietBaiDang() {
 
           <div className="card" style={{ marginTop: 24 }}>
             <div className="card-body">
-              <h1 className="chitiet-title">{bd.moTa}</h1>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
+                <h1 className="chitiet-title" style={{ marginBottom: 0 }}>{bd.moTa}</h1>
+                {user?.maNguoiDung !== bd.maNguoiDang && (
+                  <ContentActionMenu
+                    items={[
+                      {
+                        label: 'Báo cáo bài viết',
+                        danger: true,
+                        onClick: () => {
+                          if (!user) {
+                            navigate('/dang-nhap');
+                            return;
+                          }
+                          setShowReportModal(true);
+                        },
+                      },
+                    ]}
+                  />
+                )}
+              </div>
+
               <div className="chitiet-price">{fmt(bd.giaTien)}/tháng</div>
               <div className="chitiet-address">Địa chỉ: {bd.diaChi}</div>
 
@@ -167,8 +191,18 @@ export default function ChiTietBaiDang() {
 
               {bd.maPhong && (
                 <div className="chitiet-phong-info">
-                  <h3>Thông tin phòng</h3>
-                  <p>Mã phòng: #{bd.maPhong}</p>
+                  <h3>Phòng liên kết</h3>
+                  <div className="chitiet-phong-card">
+                    <div className="chitiet-phong-card-main">
+                      <strong>{bd.tenPhong || `Phòng #${bd.maPhong}`}</strong>
+                      <span>Mã phòng: #{bd.maPhong}</span>
+                      <span>Số người trong phòng: {bd.soNguoiHienTaiPhong ?? 0}/{bd.soNguoiToiDaPhong ?? 0}</span>
+                      {bd.trangThaiPhong && <span>Trạng thái phòng: {bd.trangThaiPhong}</span>}
+                    </div>
+                    <Link to={`/phong/${bd.maPhong}`} className="btn btn-outline btn-sm">
+                      Xem chi tiết phòng
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -252,6 +286,17 @@ export default function ChiTietBaiDang() {
           </div>
         </div>
       </div>
+
+      <ReportContentModal
+        open={showReportModal}
+        title="Báo cáo bài viết"
+        targetLabel={bd.moTa || `Bài đăng #${bd.maBaiDang}`}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={async payload => {
+          await baiDangAPI.baoCao(bd.maBaiDang, payload);
+          toast.success('Đã gửi báo cáo bài viết thành công');
+        }}
+      />
     </div>
   );
 }

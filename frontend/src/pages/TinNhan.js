@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ChatBox from '../components/chat/ChatBox';
-import { chatAPI, nguoiDungAPI } from '../services/api';
+import { banBeAPI, chatAPI, nguoiDungAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import { emitConversationRead, formatConversationTime, getAvatarUrl, sortByNewest } from '../utils/inbox';
 import './TinNhan.css';
@@ -27,8 +27,29 @@ export default function TinNhan() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [friendData, setFriendData] = useState({ banBe: [] });
+  const [contactKeyword, setContactKeyword] = useState('');
+  const [contactResults, setContactResults] = useState([]);
+  const [searchingContacts, setSearchingContacts] = useState(false);
 
   const selectedId = searchParams.get('nguoiDung');
+
+  const upsertConversation = profile => {
+    setConversations(current => sortByNewest([
+      buildAdHocConversation(profile),
+      ...current.filter(item => String(item.maNguoiKia) !== String(profile.maNguoiDung)),
+    ]));
+    setSearchParams({ nguoiDung: String(profile.maNguoiDung) });
+  };
+
+  const loadFriends = async () => {
+    try {
+      const response = await banBeAPI.layDanhSach();
+      setFriendData(response.data.data || { banBe: [] });
+    } catch {
+      setFriendData({ banBe: [] });
+    }
+  };
 
   const loadConversations = async () => {
     try {
@@ -36,7 +57,7 @@ export default function TinNhan() {
       const data = sortByNewest(response.data.data || []);
       setConversations(current => {
         const selected = current.find(item => String(item.maNguoiKia) === selectedId && item.tamThoi);
-        return selected && !data.some(item => item.maNguoiKia === selected.maNguoiKia)
+        return selected && !data.some(item => String(item.maNguoiKia) === String(selected.maNguoiKia))
           ? sortByNewest([selected, ...data])
           : data;
       });
@@ -49,7 +70,11 @@ export default function TinNhan() {
 
   useEffect(() => {
     loadConversations();
-    const timer = window.setInterval(loadConversations, 15000);
+    loadFriends();
+    const timer = window.setInterval(() => {
+      loadConversations();
+      loadFriends();
+    }, 15000);
     return () => window.clearInterval(timer);
   }, [refreshKey]);
 
@@ -139,6 +164,50 @@ export default function TinNhan() {
     setRefreshKey(value => value + 1);
   };
 
+  const handleContactSearch = async () => {
+    if (!contactKeyword.trim()) {
+      setContactResults([]);
+      return;
+    }
+
+    setSearchingContacts(true);
+    try {
+      const response = await banBeAPI.timNguoiDung(contactKeyword.trim());
+      setContactResults(response.data.data || []);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không tìm được người dùng');
+    } finally {
+      setSearchingContacts(false);
+    }
+  };
+
+  const openConversationFromUser = profile => {
+    if (!profile?.maNguoiDung) {
+      return;
+    }
+    upsertConversation(profile);
+  };
+
+  const renderQuickUser = profile => (
+    <button
+      key={profile.maNguoiDung}
+      type="button"
+      className="message-quick-user"
+      onClick={() => openConversationFromUser(profile)}
+    >
+      <img
+        src={getAvatarUrl(profile.hoTen, profile.avatar)}
+        alt={profile.hoTen}
+        className="avatar avatar-md"
+      />
+      <div className="message-quick-user-body">
+        <strong>{profile.hoTen}</strong>
+        <span>{profile.email || 'Chưa có Gmail'}</span>
+        <span>{profile.soDienThoai || 'Chưa có số điện thoại'}</span>
+      </div>
+    </button>
+  );
+
   return (
     <div className="container page-wrapper">
       <div className="messages-shell messenger-surface">
@@ -156,6 +225,41 @@ export default function TinNhan() {
               value={search}
               onChange={event => setSearch(event.target.value)}
             />
+          </div>
+
+          <div className="messages-contact-search">
+            <div className="messages-section-title">Tìm người dùng</div>
+            <div className="messages-contact-search-row">
+              <input
+                className="form-control"
+                placeholder="Nhập số điện thoại hoặc Gmail"
+                value={contactKeyword}
+                onChange={event => setContactKeyword(event.target.value)}
+              />
+              <button type="button" className="btn btn-secondary btn-sm" onClick={handleContactSearch} disabled={searchingContacts}>
+                {searchingContacts ? 'Đang tìm...' : 'Tìm'}
+              </button>
+            </div>
+
+            {contactResults.length > 0 && (
+              <div className="messages-quick-list">
+                {contactResults.map(renderQuickUser)}
+              </div>
+            )}
+          </div>
+
+          <div className="messages-friends">
+            <div className="messages-section-title">Bạn bè</div>
+            {friendData.banBe?.length ? (
+              <div className="messages-quick-list">
+                {friendData.banBe.map(renderQuickUser)}
+              </div>
+            ) : (
+              <div className="messages-mini-empty">
+                <span>Chưa có bạn bè nào.</span>
+                <Link to="/ban-be" className="btn btn-outline btn-sm">Quản lý bạn bè</Link>
+              </div>
+            )}
           </div>
 
           <div className="messages-list">

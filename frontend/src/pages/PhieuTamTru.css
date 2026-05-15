@@ -141,6 +141,7 @@
   color: #111827;
   box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
   font-family: 'Times New Roman', serif;
+  --ct01-filled-font-size: 13px;
 }
 
 .ct01-sheet * {
@@ -212,6 +213,8 @@
   border-bottom: 1px solid #111827;
   white-space: pre-wrap;
   word-break: break-word;
+  font-size: var(--ct01-filled-font-size);
+  line-height: 1.15;
 }
 
 .ct01-underline-value.grow,
@@ -239,6 +242,8 @@
   align-items: center;
   gap: 6px;
   flex-wrap: nowrap;
+  font-size: var(--ct01-filled-font-size);
+  line-height: 1.15;
 }
 
 .ct01-date-part {
@@ -265,6 +270,8 @@
   justify-content: center;
   min-height: 28px;
   border: 1px solid #111827;
+  font-size: var(--ct01-filled-font-size);
+  line-height: 1;
 }
 
 .ct01-members {
@@ -354,6 +361,7 @@
 .ct01-signature-name {
   min-height: 20px;
   font-weight: 700;
+  font-size: var(--ct01-filled-font-size);
 }
 
 .ct01-notes {

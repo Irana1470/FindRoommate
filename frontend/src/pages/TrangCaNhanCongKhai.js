@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import ChatBox from '../components/chat/ChatBox';
-import { danhGiaAPI, nguoiDungAPI } from '../services/api';
+import { banBeAPI, danhGiaAPI, nguoiDungAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
+import ContentActionMenu from '../components/report/ContentActionMenu';
+import UserModerationModal from '../components/admin/UserModerationModal';
 import './TrangCaNhanCongKhai.css';
 
-const formatJoinDate = value => (
-  value ? new Date(value).toLocaleDateString('vi-VN') : 'Chưa cập nhật'
-);
+const formatJoinDate = value => (value ? new Date(value).toLocaleDateString('vi-VN') : 'Chưa cập nhật');
+const formatDateTime = value => (value ? new Date(value).toLocaleString('vi-VN') : 'Không xác định');
 
 export default function TrangCaNhanCongKhai() {
   const { id } = useParams();
@@ -17,16 +18,36 @@ export default function TrangCaNhanCongKhai() {
   const [loading, setLoading] = useState(true);
   const [reviewForm, setReviewForm] = useState({ soSao: 5, moTa: '' });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [showModerationModal, setShowModerationModal] = useState(false);
+  const [moderationMode, setModerationMode] = useState('restrict');
+  const [friendStatus, setFriendStatus] = useState(null);
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
+
+  const fetchFriendStatus = async targetId => {
+    if (!user || String(user.maNguoiDung) === String(targetId)) {
+      setFriendStatus(null);
+      return;
+    }
+
+    try {
+      const response = await banBeAPI.layTrangThai(targetId);
+      setFriendStatus(response.data.data);
+    } catch {
+      setFriendStatus(null);
+    }
+  };
 
   const fetchProfile = () => {
     let active = true;
 
     setLoading(true);
     nguoiDungAPI.layTrangCaNhanCongKhai(id)
-      .then(response => {
-        if (active) {
-          setProfile(response.data.data);
+      .then(async response => {
+        if (!active) {
+          return;
         }
+        setProfile(response.data.data);
+        await fetchFriendStatus(id);
       })
       .catch(error => {
         if (active) {
@@ -45,7 +66,7 @@ export default function TrangCaNhanCongKhai() {
     };
   };
 
-  useEffect(() => fetchProfile(), [id]);
+  useEffect(() => fetchProfile(), [id, user?.maNguoiDung]);
 
   const handleSubmitReview = async event => {
     event.preventDefault();
@@ -70,6 +91,35 @@ export default function TrangCaNhanCongKhai() {
     }
   };
 
+  const handleFriendAction = async action => {
+    if (!profile?.maNguoiDung) {
+      return;
+    }
+
+    setFriendActionLoading(true);
+    try {
+      if (action === 'send') {
+        await banBeAPI.guiLoiMoi(profile.maNguoiDung);
+        toast.success('Đã gửi lời mời kết bạn');
+      } else if (action === 'accept' && friendStatus?.maBanBe) {
+        await banBeAPI.phanHoiLoiMoi(friendStatus.maBanBe, true);
+        toast.success('Đã chấp nhận lời mời kết bạn');
+      } else if (action === 'reject' && friendStatus?.maBanBe) {
+        await banBeAPI.phanHoiLoiMoi(friendStatus.maBanBe, false);
+        toast.success('Đã từ chối lời mời kết bạn');
+      } else if ((action === 'remove' || action === 'cancel') && friendStatus?.maBanBe) {
+        await banBeAPI.xoaQuanHe(friendStatus.maBanBe);
+        toast.success(action === 'remove' ? 'Đã xóa bạn bè' : 'Đã hủy lời mời kết bạn');
+      }
+
+      await fetchFriendStatus(profile.maNguoiDung);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Không thể cập nhật trạng thái kết bạn');
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="spinner" />;
   }
@@ -83,9 +133,11 @@ export default function TrangCaNhanCongKhai() {
   }
 
   const isOwnProfile = user?.maNguoiDung === profile.maNguoiDung;
+  const isAdmin = user?.role === 'ADMIN';
   const hasRating = profile.diemDanhGia !== null && profile.diemDanhGia !== undefined;
   const avatar = profile.avatar
     || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.hoTen || 'U')}&background=12355B&color=fff&size=160`;
+
   const thongTinNhanh = [
     ['Trạng thái xác thực', profile.xacThuc ? 'Đã xác thực CCCD' : 'Chưa xác thực'],
     ['Ngày tham gia', formatJoinDate(profile.ngayTao)],
@@ -93,10 +145,81 @@ export default function TrangCaNhanCongKhai() {
     ['Hoạt động', `${profile.tongBaiDang ?? 0} bài đăng và ${profile.tongPhong ?? 0} phòng`],
   ];
 
+  const moderationNotices = [
+    profile.taiKhoanBiKhoa && (
+      <div key="lock" className="public-profile-notice danger">
+        Tài khoản này đang bị khóa{profile.lyDoKhoaTaiKhoan ? ` do ${profile.lyDoKhoaTaiKhoan}` : '.'}
+      </div>
+    ),
+    profile.biHanCheHoatDong && (
+      <div key="restrict" className="public-profile-notice warning">
+        Tài khoản này bị hạn chế hoạt động
+        {profile.lyDoHanCheHoatDong ? ` do ${profile.lyDoHanCheHoatDong}` : ''}
+        . Thời hạn đến {formatDateTime(profile.thoiGianHanCheDen)}.
+      </div>
+    ),
+    profile.canhBaoTaiKhoan && (
+      <div key="warning" className="public-profile-notice info">
+        Cảnh báo tài khoản: {profile.canhBaoTaiKhoan}
+      </div>
+    ),
+  ].filter(Boolean);
+
+  const renderFriendActions = () => {
+    if (!user || isOwnProfile) {
+      return null;
+    }
+
+    if (!friendStatus || friendStatus.trangThai === 'NONE') {
+      return (
+        <button type="button" className="btn btn-secondary" onClick={() => handleFriendAction('send')} disabled={friendActionLoading}>
+          {friendActionLoading ? 'Đang gửi...' : 'Kết bạn'}
+        </button>
+      );
+    }
+
+    if (friendStatus.trangThai === 'PENDING' && friendStatus.coTheChapNhan) {
+      return (
+        <div className="public-profile-inline-actions">
+          <button type="button" className="btn btn-success" onClick={() => handleFriendAction('accept')} disabled={friendActionLoading}>
+            Chấp nhận
+          </button>
+          <button type="button" className="btn btn-outline" onClick={() => handleFriendAction('reject')} disabled={friendActionLoading}>
+            Từ chối
+          </button>
+        </div>
+      );
+    }
+
+    if (friendStatus.trangThai === 'PENDING') {
+      return (
+        <button type="button" className="btn btn-outline" onClick={() => handleFriendAction('cancel')} disabled={friendActionLoading}>
+          {friendActionLoading ? 'Đang xử lý...' : 'Hủy lời mời kết bạn'}
+        </button>
+      );
+    }
+
+    if (friendStatus.trangThai === 'ACCEPTED') {
+      return (
+        <button type="button" className="btn btn-outline" onClick={() => handleFriendAction('remove')} disabled={friendActionLoading}>
+          {friendActionLoading ? 'Đang xử lý...' : 'Bạn bè'}
+        </button>
+      );
+    }
+
+    return (
+      <button type="button" className="btn btn-secondary" onClick={() => handleFriendAction('send')} disabled={friendActionLoading}>
+        Kết bạn
+      </button>
+    );
+  };
+
   return (
     <div className="container page-wrapper">
       <div className="public-profile-layout">
         <div>
+          {moderationNotices.length > 0 && <div className="public-profile-notices">{moderationNotices}</div>}
+
           <div className="card public-profile-hero">
             <div className="card-body public-profile-hero-body">
               <div className="public-profile-avatar">
@@ -107,6 +230,15 @@ export default function TrangCaNhanCongKhai() {
                 <div className="public-profile-title-row">
                   <h1>{profile.hoTen}</h1>
                   {profile.xacThuc && <span className="badge badge-success">Đã xác thực</span>}
+                  {isAdmin && !isOwnProfile && (
+                    <ContentActionMenu
+                      items={[
+                        { label: 'Hạn chế người dùng', onClick: () => { setModerationMode('restrict'); setShowModerationModal(true); } },
+                        { label: 'Cảnh báo người dùng', onClick: () => { setModerationMode('warning'); setShowModerationModal(true); } },
+                        { label: 'Khóa tài khoản', danger: true, onClick: () => { setModerationMode('lock'); setShowModerationModal(true); } },
+                      ]}
+                    />
+                  )}
                 </div>
 
                 <div className="public-profile-meta">
@@ -120,7 +252,10 @@ export default function TrangCaNhanCongKhai() {
                   {isOwnProfile ? (
                     <Link to="/ho-so" className="btn btn-primary">Về hồ sơ của tôi</Link>
                   ) : (
-                    <Link to={`/tin-nhan?nguoiDung=${profile.maNguoiDung}`} className="btn btn-primary">Nhắn tin</Link>
+                    <>
+                      <Link to={`/tin-nhan?nguoiDung=${profile.maNguoiDung}`} className="btn btn-primary">Nhắn tin</Link>
+                      {renderFriendActions()}
+                    </>
                   )}
                 </div>
               </div>
@@ -243,7 +378,7 @@ export default function TrangCaNhanCongKhai() {
               ) : (
                 <>
                   <div className="public-profile-owner-note">
-                    Đăng nhập để nhắn tin và đánh giá người dùng này.
+                    Đăng nhập để nhắn tin, kết bạn và đánh giá người dùng này.
                   </div>
                   <Link to="/dang-nhap" className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
                     Đăng nhập để tiếp tục
@@ -275,6 +410,14 @@ export default function TrangCaNhanCongKhai() {
           )}
         </div>
       </div>
+
+      <UserModerationModal
+        open={showModerationModal}
+        user={profile}
+        initialMode={moderationMode}
+        onClose={() => setShowModerationModal(false)}
+        onUpdated={fetchProfile}
+      />
     </div>
   );
 }

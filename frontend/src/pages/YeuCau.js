@@ -15,6 +15,8 @@ const getStatusBadge = status => {
   return 'badge-warning';
 };
 
+const getRequestTypeLabel = requestType => (requestType === 'ROI_PHONG' ? 'rời phòng' : 'tham gia phòng');
+
 export default function YeuCau() {
   const [sentRequests, setSentRequests] = useState([]);
   const [incomingRequests, setIncomingRequests] = useState([]);
@@ -57,7 +59,7 @@ export default function YeuCau() {
   }, [loadData]);
 
   const pendingIncomingRequests = useMemo(
-    () => incomingRequests.filter(request => request.trangThai === 'Chờ duyệt'),
+    () => incomingRequests.filter(request => request.trangThai === 'Cho duyet'),
     [incomingRequests]
   );
 
@@ -65,7 +67,7 @@ export default function YeuCau() {
     setActingId(requestId);
     try {
       await yeuCauAPI.duyet(requestId, accepted);
-      toast.success(accepted ? 'Đã duyêt yêu cầu' : 'Đã từ chối yêu cầu');
+      toast.success(accepted ? 'Đã duyệt yêu cầu' : 'Đã từ chối yêu cầu');
       await loadData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Xử lý yêu cầu thất bại');
@@ -78,10 +80,10 @@ export default function YeuCau() {
     setActingId(requestId);
     try {
       await yeuCauAPI.huy(requestId);
-      toast.success('Da huy yeu cau');
+      toast.success('Đã hủy yêu cầu');
       setSentRequests(current => current.filter(request => request.maYeuCau !== requestId));
     } catch (error) {
-      toast.error(error.response?.data?.message || 'hủy yêu cầu thất bại');
+      toast.error(error.response?.data?.message || 'Hủy yêu cầu thất bại');
     } finally {
       setActingId(null);
     }
@@ -91,17 +93,17 @@ export default function YeuCau() {
 
   return (
     <div className="container page-wrapper">
-      <h1 className="section-title">Yêu cầu tham gia phòng</h1>
-      <p className="section-subtitle">Quản lý yêu cầu vào phòng của bạn và các yêu cầu đã gửi.</p>
+      <h1 className="section-title">Yêu cầu phòng</h1>
+      <p className="section-subtitle">Quản lý yêu cầu tham gia phòng, rời phòng và các yêu cầu bạn đã gửi.</p>
 
       <div style={{ display: 'grid', gap: 24 }}>
         <section className="card">
-          <div className="card-header">Yêu cầu vào phòng</div>
+          <div className="card-header">Yêu cầu gửi tới phòng của bạn</div>
           <div className="card-body">
             {ownedRooms.length === 0 ? (
               <div className="member-empty">Không có yêu cầu nào.</div>
             ) : incomingRequests.length === 0 ? (
-              <div className="member-empty">Chưa có ai gửi yêu cầu vào phòng của bạn.</div>
+              <div className="member-empty">Chưa có yêu cầu nào gửi tới phòng của bạn.</div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {incomingRequests.map(request => (
@@ -112,13 +114,19 @@ export default function YeuCau() {
                           <Link to={`/nguoi-dung/${request.maNguoiDung}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                             {request.tenNguoiDung}
                           </Link>
-                          {' '}muon vao phong: <strong>{request.tenPhong}</strong>
+                          {' '}
+                          {request.loaiYeuCau === 'ROI_PHONG' ? 'muốn rời phòng:' : 'muốn vào phòng:'}
+                          {' '}
+                          <strong>{request.tenPhong}</strong>
                         </div>
                         {request.moTa && (
                           <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>{request.moTa}</div>
                         )}
                         <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 6 }}>
-                          Gui luc: {request.ngayYeuCau ? new Date(request.ngayYeuCau).toLocaleString('vi-VN') : ''}
+                          Gửi lúc: {request.ngayYeuCau ? new Date(request.ngayYeuCau).toLocaleString('vi-VN') : ''}
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>
+                          Loại yêu cầu: {getRequestTypeLabel(request.loaiYeuCau)}
                         </div>
                       </div>
 
@@ -155,7 +163,7 @@ export default function YeuCau() {
 
             {pendingIncomingRequests.length > 0 && (
               <div style={{ marginTop: 14, color: 'var(--text-muted)', fontSize: 13 }}>
-                Dang co {pendingIncomingRequests.length} yeu cau cho duyet.
+                Đang có {pendingIncomingRequests.length} yêu cầu chờ duyệt.
               </div>
             )}
           </div>
@@ -173,13 +181,16 @@ export default function YeuCau() {
                     <div className="card-body" style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center' }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 16 }}>
-                          Phong: <strong>{request.tenPhong}</strong>
+                          Phòng: <strong>{request.tenPhong}</strong>
                         </div>
                         {request.moTa && (
                           <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>{request.moTa}</div>
                         )}
                         <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 6 }}>
                           Gửi lúc: {request.ngayYeuCau ? new Date(request.ngayYeuCau).toLocaleString('vi-VN') : ''}
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 4 }}>
+                          Loại yêu cầu: {getRequestTypeLabel(request.loaiYeuCau)}
                         </div>
                       </div>
 
@@ -194,7 +205,7 @@ export default function YeuCau() {
                             onClick={() => handleCancel(request.maYeuCau)}
                             disabled={actingId === request.maYeuCau}
                           >
-                            Huy yeu cau
+                            Hủy yêu cầu
                           </button>
                         )}
                       </div>

@@ -1,0 +1,61 @@
+.content-action-menu {
+  position: relative;
+}
+
+.content-action-trigger {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #dbe5f0);
+  background: var(--card-bg, #fff);
+  color: var(--text-main, #132235);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 14px 32px rgba(16, 36, 58, 0.08);
+}
+
+.content-action-trigger svg {
+  width: 18px;
+  height: 18px;
+}
+
+.content-action-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  min-width: 190px;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #dbe5f0);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 22px 48px rgba(16, 36, 58, 0.14);
+  z-index: 40;
+}
+
+.content-action-dropdown.right {
+  right: 0;
+}
+
+.content-action-dropdown.left {
+  left: 0;
+}
+
+.content-action-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-main, #132235);
+  text-align: left;
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.content-action-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.content-action-item.danger {
+  color: #b42318;
+}

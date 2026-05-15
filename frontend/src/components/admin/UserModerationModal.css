@@ -1,0 +1,75 @@
+.user-moderation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1200;
+}
+
+.user-moderation-card {
+  width: min(100%, 560px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+}
+
+.user-moderation-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.user-moderation-header h3 {
+  margin: 0 0 4px;
+}
+
+.user-moderation-header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.user-moderation-close {
+  border: 0;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.user-moderation-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.user-moderation-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-moderation-checks {
+  display: grid;
+  gap: 10px;
+  color: var(--text);
+}
+
+.user-moderation-checks label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-moderation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}

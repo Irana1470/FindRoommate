@@ -552,10 +552,10 @@ export default function PhieuTamTru() {
 
     setPreviewDownloading(true);
     try {
-      const response = await phieuTamTruAPI.taiPdfXemTruoc(payload);
-      downloadBlob(response.data, buildCt01FileName(previewData));
+      const response = await phieuTamTruAPI.taiDocxXemTruoc(payload);
+      downloadBlob(response.data, buildCt01FileName(previewData, 'docx'));
     } catch (errorResponse) {
-      toast.error(await extractErrorMessage(errorResponse, 'Không thể tạo file PDF xem trước'));
+      toast.error(await extractErrorMessage(errorResponse, 'Không thể tạo file DOCX xem trước'));
     } finally {
       setPreviewDownloading(false);
     }
@@ -566,10 +566,10 @@ export default function PhieuTamTru() {
 
     setDownloadingPhieuId(phieu.maPhieuTamTru);
     try {
-      const response = await phieuTamTruAPI.taiPdf(phieu.maPhieuTamTru);
-      downloadBlob(response.data, buildCt01FileName(phieu));
+      const response = await phieuTamTruAPI.taiDocx(phieu.maPhieuTamTru);
+      downloadBlob(response.data, buildCt01FileName(phieu, 'docx'));
     } catch (errorResponse) {
-      toast.error(await extractErrorMessage(errorResponse, 'Không thể tải file PDF của phiếu'));
+      toast.error(await extractErrorMessage(errorResponse, 'Không thể tải file DOCX của phiếu'));
     } finally {
       setDownloadingPhieuId(null);
     }
@@ -608,7 +608,7 @@ export default function PhieuTamTru() {
         <div>
           <h1 className="section-title">Phiếu tạm trú</h1>
           <p className="section-subtitle">
-            Lập phiếu theo mẫu CT01, chỉnh sửa trực tiếp từng trường và tải PDF bám theo biểu mẫu Thông tư 66/2023/TT-BCA.
+            Lập phiếu theo mẫu CT01, chỉnh sửa trực tiếp từng trường và tải file DOCX đã điền theo biểu mẫu Thông tư 66/2023/TT-BCA.
           </p>
         </div>
         <div className="phieu-brand-pill">FindRoomMate</div>
@@ -697,7 +697,7 @@ export default function PhieuTamTru() {
               <div className="phieu-preview-actions">
                 <div>
                   <h3>Mẫu CT01 đã điền</h3>
-                  <p>Biểu mẫu hiển thị theo CT01. Bạn có thể sửa, xóa hoặc tải lại PDF từ bản đã lưu bất kỳ lúc nào.</p>
+                  <p>Biểu mẫu hiển thị theo CT01. Bạn có thể sửa, xóa hoặc tải lại file DOCX từ bản đã lưu bất kỳ lúc nào.</p>
                 </div>
                 <div className="phieu-action-group">
                   <button
@@ -722,7 +722,7 @@ export default function PhieuTamTru() {
                     onClick={() => handleDownloadSaved(selectedPhieu)}
                     disabled={!selectedPhieu || downloadingPhieuId === selectedPhieu?.maPhieuTamTru}
                   >
-                    {downloadingPhieuId === selectedPhieu?.maPhieuTamTru ? 'Đang tải...' : 'Tải PDF'}
+                    {downloadingPhieuId === selectedPhieu?.maPhieuTamTru ? 'Đang tải...' : 'Tải DOCX'}
                   </button>
                 </div>
               </div>
@@ -741,7 +741,7 @@ export default function PhieuTamTru() {
             </div>
             <div className="card-body">
               <div className="alert alert-info">
-                Biểu mẫu xem trước và PDF sẽ hiển thị theo CT01. Địa chỉ tạm trú vẫn được dùng để tự tạo nội dung đề nghị khi bạn để trống phần đó.
+                Biểu mẫu xem trước và file DOCX tải xuống sẽ hiển thị theo CT01. Các trường bạn để trống sẽ được giữ trống trong file mẫu.
               </div>
 
               <form noValidate onSubmit={handleSubmit}>
@@ -910,7 +910,7 @@ export default function PhieuTamTru() {
                       className="form-control"
                       rows={4}
                       maxLength={500}
-                      placeholder="Để trống, hệ thống sẽ tự tạo nội dung theo địa chỉ tạm trú và ngày bắt đầu"
+                      placeholder="Để trống nếu bạn muốn backend giữ trống phần nội dung trong file mẫu"
                       value={form.noiDungDeNghi}
                       onChange={event => setField('noiDungDeNghi', event.target.value)}
                     />
@@ -927,7 +927,7 @@ export default function PhieuTamTru() {
                     disabled={previewDownloading}
                     onClick={handleDownloadPreview}
                   >
-                    {previewDownloading ? 'Đang tạo PDF...' : 'Tải PDF xem trước'}
+                    {previewDownloading ? 'Đang tạo DOCX...' : 'Tải DOCX xem trước'}
                   </button>
                   <button
                     type="button"
@@ -945,7 +945,7 @@ export default function PhieuTamTru() {
             <div className="phieu-preview-actions">
               <div>
                 <h3>Xem trước mẫu CT01</h3>
-                <p>Bản xem trước phản ánh đúng dữ liệu sẽ lưu và cũng là dữ liệu dùng để tạo PDF.</p>
+                <p>Bản xem trước phản ánh đúng dữ liệu sẽ lưu và cũng là dữ liệu dùng để tạo file DOCX.</p>
               </div>
             </div>
 

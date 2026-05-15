@@ -119,6 +119,7 @@ a { color: inherit; }
 
 .btn-success { background: var(--accent); color: #fff; }
 .btn-danger { background: var(--danger); color: #fff; }
+.btn-warning { background: #f59e0b; color: #fff; }
 
 .btn-outline {
   background: transparent;
@@ -210,9 +211,11 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .badge-warning { background: #fef1c7; color: #8a6220; }
 .badge-danger { background: #f7d7dc; color: #8d2635; }
 .badge-info { background: #d9e8f6; color: #214a73; }
+.badge-secondary { background: var(--surface-alt); color: var(--secondary); }
 .badge-gray { background: var(--badge-gray-bg); color: var(--badge-gray-text); }
 
 .room-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid rgba(18, 53, 91, 0.06);
   border-radius: var(--radius);

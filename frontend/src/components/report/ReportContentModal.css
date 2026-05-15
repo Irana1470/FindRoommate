@@ -1,0 +1,58 @@
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.56);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1200;
+}
+
+.report-modal-card {
+  width: min(100%, 520px);
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border-color, #dbe5f0);
+  border-radius: 24px;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.25);
+  padding: 24px;
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.report-modal-header h3 {
+  margin: 0 0 6px;
+}
+
+.report-modal-header p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.report-modal-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.report-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.report-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}

@@ -7,6 +7,9 @@ const createInitialForm = () => ({
   title: '',
   giaTien: '',
   tienDichVu: '',
+  tienDien: '',
+  tienNuoc: '',
+  kieuTinhTienNuoc: 'meter',
   soNguoiToiDa: '',
   tinhThanh: '',
   quanHuyen: '',
@@ -83,6 +86,9 @@ export default function TaoPhong() {
           title: phong.title || '',
           giaTien: phong.giaTien || '',
           tienDichVu: phong.tienDichVu || '',
+          tienDien: phong.tienDien || '',
+          tienNuoc: phong.tienNuoc || '',
+          kieuTinhTienNuoc: phong.kieuTinhTienNuoc || 'meter',
           soNguoiToiDa: phong.soNguoiToiDa || '',
           tinhThanh: phong.tinhThanh || '',
           quanHuyen: phong.quanHuyen || '',
@@ -209,6 +215,9 @@ export default function TaoPhong() {
         title: form.title,
         giaTien: parseMoney(form.giaTien),
         tienDichVu: parseMoney(form.tienDichVu),
+        tienDien: parseMoney(form.tienDien),
+        tienNuoc: parseMoney(form.tienNuoc),
+        kieuTinhTienNuoc: form.kieuTinhTienNuoc,
         soNguoiToiDa: parseInt(form.soNguoiToiDa, 10),
         tinhThanh: form.tinhThanh,
         quanHuyen: form.quanHuyen,
@@ -298,9 +307,59 @@ export default function TaoPhong() {
                     placeholder="300000"
                   />
                 </div>
+                <div className="form-group">
+                  <label className="form-label">Giá điện / số</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="0"
+                    value={form.tienDien}
+                    onChange={event => set('tienDien', event.target.value)}
+                    placeholder="3500"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Cấu hình tiền nước</label>
+                <div className="room-detail-radio-group" role="radiogroup" aria-label="Kiểu tính tiền nước">
+                  <label className="room-detail-radio-option">
+                    <input
+                      type="radio"
+                      name="kieuTinhTienNuoc"
+                      value="meter"
+                      checked={form.kieuTinhTienNuoc === 'meter'}
+                      onChange={event => set('kieuTinhTienNuoc', event.target.value)}
+                    />
+                    <span>Tính theo số nước</span>
+                  </label>
+                  <label className="room-detail-radio-option">
+                    <input
+                      type="radio"
+                      name="kieuTinhTienNuoc"
+                      value="fixed"
+                      checked={form.kieuTinhTienNuoc === 'fixed'}
+                      onChange={event => set('kieuTinhTienNuoc', event.target.value)}
+                    />
+                    <span>Nhập tiền cố định</span>
+                  </label>
+                </div>
               </div>
 
               <div className="grid-2">
+                <div className="form-group">
+                  <label className="form-label">
+                    {form.kieuTinhTienNuoc === 'meter' ? 'Giá nước / 1m3' : 'Tiền nước cố định'}
+                  </label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="0"
+                    value={form.tienNuoc}
+                    onChange={event => set('tienNuoc', event.target.value)}
+                    placeholder={form.kieuTinhTienNuoc === 'meter' ? '15000' : '300000'}
+                  />
+                </div>
                 <div className="form-group">
                   <label className="form-label">Tỉnh / Thành phố *</label>
                   <select

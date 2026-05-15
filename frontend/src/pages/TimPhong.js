@@ -1,13 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import RoomMap from '../components/map/RoomMap';
 import { addressAPI, phongAPI } from '../services/api';
 import { buildPhongAddress } from '../utils/location';
+import useAuthStore from '../store/authStore';
+import ContentActionMenu from '../components/report/ContentActionMenu';
+import ReportContentModal from '../components/report/ReportContentModal';
 import './TimPhong.css';
 
 const fmt = n => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(n || 0);
 
 export default function TimPhong() {
+  const navigate = useNavigate();
+  const currentUser = useAuthStore(state => state.user);
   const [filters, setFilters] = useState({
     giaTienMin: '',
     giaTienMax: '',
@@ -24,6 +30,7 @@ export default function TimPhong() {
   const [quanHuyens, setQuanHuyens] = useState([]);
   const [selectedTinhThanhCode, setSelectedTinhThanhCode] = useState('');
   const [selectedQuanHuyenCode, setSelectedQuanHuyenCode] = useState('');
+  const [selectedReportRoom, setSelectedReportRoom] = useState(null);
 
   const set = (key, value) => setFilters(current => ({ ...current, [key]: value }));
 
@@ -241,7 +248,26 @@ export default function TimPhong() {
               {phongs.map(phong => (
                 <div key={phong.maPhong} className="card phong-item">
                   <div className="card-body">
-                    <h4 style={{ fontWeight: 700, marginBottom: 8 }}>{phong.title}</h4>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
+                      <h4 style={{ fontWeight: 700, marginBottom: 8 }}>{phong.title}</h4>
+                      {currentUser?.maNguoiDung !== phong.maChuPhong && (
+                        <ContentActionMenu
+                          items={[
+                            {
+                              label: 'Báo cáo phòng',
+                              danger: true,
+                              onClick: () => {
+                                if (!currentUser) {
+                                  navigate('/dang-nhap');
+                                  return;
+                                }
+                                setSelectedReportRoom(phong);
+                              },
+                            },
+                          ]}
+                        />
+                      )}
+                    </div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--primary)' }}>
                       {fmt(phong.giaTien)}/tháng
                     </div>
@@ -256,6 +282,9 @@ export default function TimPhong() {
                         {phong.trangThai === 'San sang' ? 'Còn trống' : 'Đã đầy'}
                       </span>
                     </div>
+                    <button type="button" className="btn btn-outline btn-block" style={{ marginTop: 14 }} onClick={() => navigate(`/phong/${phong.maPhong}`)}>
+                      Xem chi tiết
+                    </button>
                   </div>
                 </div>
               ))}
@@ -263,6 +292,17 @@ export default function TimPhong() {
           )}
         </>
       )}
+
+      <ReportContentModal
+        open={Boolean(selectedReportRoom)}
+        title="Báo cáo phòng"
+        targetLabel={selectedReportRoom?.title || ''}
+        onClose={() => setSelectedReportRoom(null)}
+        onSubmit={async payload => {
+          await phongAPI.baoCao(selectedReportRoom.maPhong, payload);
+          toast.success('Đã gửi báo cáo phòng thành công');
+        }}
+      />
     </div>
   );
 }

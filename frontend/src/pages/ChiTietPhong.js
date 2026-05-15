@@ -4,6 +4,9 @@ import toast from 'react-hot-toast';
 import { phongAPI, thanhToanAPI, yeuCauAPI } from '../services/api';
 import useAuthStore from '../store/authStore';
 import { buildPhongAddress } from '../utils/location';
+import ContentActionMenu from '../components/report/ContentActionMenu';
+import ReportContentModal from '../components/report/ReportContentModal';
+import AddRoomMemberModal from '../components/room/AddRoomMemberModal';
 import './ChiTietPhong.css';
 
 const fmt = value => `${new Intl.NumberFormat('vi-VN').format(Number(value) || 0)} đ`;
@@ -29,7 +32,7 @@ const createManualSplitForm = phong => ({
   tienDichVu: parseMoney(phong?.tienDichVu),
   giaDien: parseMoney(phong?.tienDien),
   soDien: '',
-  waterMode: 'meter',
+  waterMode: phong?.kieuTinhTienNuoc === 'fixed' ? 'fixed' : 'meter',
   giaNuoc: parseMoney(phong?.tienNuoc),
   soNuoc: '',
   tienNuocCoDinh: parseMoney(phong?.tienNuoc) ? String(parseMoney(phong?.tienNuoc)) : '',
@@ -62,11 +65,14 @@ export default function ChiTietPhong() {
   const [yeuCaus, setYeuCaus] = useState([]);
   const [memberMenu, setMemberMenu] = useState(null);
   const [deletingPhong, setDeletingPhong] = useState(false);
+  const [leavingRoom, setLeavingRoom] = useState(false);
   const [showApply, setShowApply] = useState(false);
   const [applying, setApplying] = useState(false);
   const [moTaYeuCau, setMoTaYeuCau] = useState('');
   const [manualSplitForm, setManualSplitForm] = useState(() => createManualSplitForm());
   const [manualSplitLoading, setManualSplitLoading] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
 
   const fetchChiTietPhong = useCallback(async () => {
     try {
@@ -99,7 +105,7 @@ export default function ChiTietPhong() {
       const res = await yeuCauAPI.layCuaPhong(id);
       setYeuCaus(res.data.data || []);
     } catch {
-      toast.error('Không tải được yêu cầu tham gia');
+      toast.error('Không tải được yêu cầu phòng');
     }
   }, [id]);
 
@@ -157,6 +163,21 @@ export default function ChiTietPhong() {
     }
   };
 
+  const handleLeaveRoom = async () => {
+    if (!window.confirm('Bạn muốn gửi yêu cầu rời phòng đến chủ phòng?')) return;
+
+    setLeavingRoom(true);
+    try {
+      await yeuCauAPI.gui({ maPhong: Number(id), loaiYeuCau: 'ROI_PHONG' });
+      toast.success('Đã gửi yêu cầu rời phòng');
+      await fetchChiTietPhong();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Gửi yêu cầu rời phòng thất bại');
+    } finally {
+      setLeavingRoom(false);
+    }
+  };
+
   const handleApply = async () => {
     if (!currentUser) {
       navigate('/dang-nhap');
@@ -203,6 +224,11 @@ export default function ChiTietPhong() {
         tienDichVu,
         tienDien,
         tienNuoc,
+        giaDien: parseMoney(manualSplitForm.giaDien),
+        soDien: manualSplitForm.soDien === '' ? null : parseMoney(manualSplitForm.soDien),
+        giaNuoc: manualSplitForm.waterMode === 'meter' ? parseMoney(manualSplitForm.giaNuoc) : null,
+        soNuoc: manualSplitForm.waterMode === 'meter' && manualSplitForm.soNuoc !== '' ? parseMoney(manualSplitForm.soNuoc) : null,
+        kieuTinhTienNuoc: manualSplitForm.waterMode,
         moTa: manualSplitForm.moTa.trim(),
       });
 
@@ -250,9 +276,28 @@ export default function ChiTietPhong() {
                 <h1>{phong.title}</h1>
                 <p>{buildPhongAddress(phong)}</p>
               </div>
-              <div className="room-detail-price">
-                <strong>{fmt(phong.giaTien)}</strong>
-                <span>/tháng</span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div className="room-detail-price">
+                  <strong>{fmt(phong.giaTien)}</strong>
+                  <span>/tháng</span>
+                </div>
+                {!isOwner && (
+                  <ContentActionMenu
+                    items={[
+                      {
+                        label: 'Báo cáo phòng',
+                        danger: true,
+                        onClick: () => {
+                          if (!currentUser) {
+                            navigate('/dang-nhap');
+                            return;
+                          }
+                          setShowReportModal(true);
+                        },
+                      },
+                    ]}
+                  />
+                )}
               </div>
             </div>
 
@@ -276,13 +321,16 @@ export default function ChiTietPhong() {
 
           <section className="card room-detail-section">
             <div className="room-detail-section-header">
-              <h2>Chi phí hằng tháng</h2>
+              <h2>Chi phí hàng tháng</h2>
             </div>
             <div className="room-detail-cost-grid">
               <div className="room-detail-cost-card"><span>Giá phòng</span><strong>{fmt(phong.giaTien)}/tháng</strong></div>
               <div className="room-detail-cost-card"><span>Tiền dịch vụ</span><strong>{fmt(phong.tienDichVu)}</strong></div>
               <div className="room-detail-cost-card"><span>Giá điện cấu hình</span><strong>{fmt(phong.tienDien)}/số</strong></div>
-              <div className="room-detail-cost-card"><span>Cấu hình nước</span><strong>{fmt(phong.tienNuoc)}</strong></div>
+              <div className="room-detail-cost-card">
+                <span>Cấu hình nước</span>
+                <strong>{phong.kieuTinhTienNuoc === 'fixed' ? `${fmt(phong.tienNuoc)}/tháng` : `${fmt(phong.tienNuoc)}/1 m3`}</strong>
+              </div>
             </div>
           </section>
 
@@ -348,7 +396,7 @@ export default function ChiTietPhong() {
           {isOwner && showYeuCau && (
             <section className="card room-detail-section">
               <div className="room-detail-section-header">
-                <h2>Yêu cầu tham gia</h2>
+                <h2>Yêu cầu phòng</h2>
               </div>
               {yeuCaus.length === 0 ? (
                 <p className="room-detail-member-empty">Chưa có yêu cầu nào.</p>
@@ -365,6 +413,9 @@ export default function ChiTietPhong() {
                         />
                         <div>
                           <strong>{yc.tenNguoiDung}</strong>
+                          <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>
+                            {yc.loaiYeuCau === 'ROI_PHONG' ? 'Yêu cầu rời phòng' : 'Yêu cầu tham gia phòng'}
+                          </p>
                           {yc.moTa && <p>{yc.moTa}</p>}
                         </div>
                       </Link>
@@ -442,32 +493,13 @@ export default function ChiTietPhong() {
 
                   <div className="room-detail-split-panel">
                     <div className="room-detail-split-panel-title">Tiền nước</div>
-                    <div className="room-detail-radio-group" role="radiogroup" aria-label="Kiểu tính tiền nước">
-                      <label className="room-detail-radio-option">
-                        <input
-                          type="radio"
-                          name="waterMode"
-                          value="meter"
-                          checked={manualSplitForm.waterMode === 'meter'}
-                          onChange={event => handleManualSplitChange('waterMode', event.target.value)}
-                        />
-                        <span>Tính theo số nước</span>
-                      </label>
-                      <label className="room-detail-radio-option">
-                        <input
-                          type="radio"
-                          name="waterMode"
-                          value="fixed"
-                          checked={manualSplitForm.waterMode === 'fixed'}
-                          onChange={event => handleManualSplitChange('waterMode', event.target.value)}
-                        />
-                        <span>Nhập tiền cố định</span>
-                      </label>
+                    <div className="room-detail-inline-note">
+                      {manualSplitForm.waterMode === 'meter' ? 'Cấu hình phòng: Tính theo số nước' : 'Cấu hình phòng: Nhập tiền cố định'}
                     </div>
 
                     {manualSplitForm.waterMode === 'meter' ? (
                       <>
-                        <div className="room-detail-inline-note">Giá nước: {fmt(manualSplitForm.giaNuoc)} / số</div>
+                        <div className="room-detail-inline-note">Giá nước: {fmt(manualSplitForm.giaNuoc)} / 1 m3</div>
                         <div className="form-group">
                           <label className="form-label">Nhập số nước tháng này</label>
                           <input
@@ -571,12 +603,26 @@ export default function ChiTietPhong() {
             </section>
           )}
 
+          {isMember && !isOwner && (
+            <section className="card room-detail-owner-card room-detail-action-card">
+              <div className="card-header">Thành viên phòng</div>
+              <div className="card-body">
+                <button className="btn btn-danger btn-block" onClick={handleLeaveRoom} disabled={leavingRoom}>
+                  {leavingRoom ? 'Đang gửi yêu cầu...' : 'Gửi yêu cầu rời phòng'}
+                </button>
+              </div>
+            </section>
+          )}
+
           {isOwner && (
             <section className="card room-detail-owner-card room-detail-action-card">
               <div className="card-header">Quản lý phòng</div>
               <div className="card-body">
                 <button className="btn btn-outline btn-block" onClick={() => navigate(`/phong/${id}/chinh-sua`)}>
                   Chỉnh sửa
+                </button>
+                <button className="btn btn-primary btn-block" onClick={() => setShowAddMemberModal(true)}>
+                  Thêm thành viên
                 </button>
                 <button className="btn btn-secondary btn-block" onClick={handleToggleYeuCau}>
                   {showYeuCau ? 'Ẩn yêu cầu' : 'Xem yêu cầu'}
@@ -592,6 +638,23 @@ export default function ChiTietPhong() {
           )}
         </aside>
       </div>
+
+      <AddRoomMemberModal
+        open={showAddMemberModal}
+        maPhong={phong.maPhong}
+        onClose={() => setShowAddMemberModal(false)}
+        onAdded={fetchChiTietPhong}
+      />
+      <ReportContentModal
+        open={showReportModal}
+        title="Báo cáo phòng"
+        targetLabel={phong.title || `Phòng #${phong.maPhong}`}
+        onClose={() => setShowReportModal(false)}
+        onSubmit={async payload => {
+          await phongAPI.baoCao(phong.maPhong, payload);
+          toast.success('Đã gửi báo cáo phòng');
+        }}
+      />
     </div>
   );
 }

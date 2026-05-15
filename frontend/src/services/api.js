@@ -19,7 +19,9 @@ API.interceptors.request.use(config => {
   }
 
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const requestPath = typeof config.url === 'string' ? config.url : '';
+  const isAuthRequest = requestPath.startsWith('/auth/');
+  if (token && !isAuthRequest) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
@@ -58,9 +60,13 @@ export const nguoiDungAPI = {
   layLichSuGiaoDich: () => API.get('/nguoi-dung/toi/lich-su-giao-dich'),
   layThongTin: id => API.get(`/nguoi-dung/${id}`),
   layTrangCaNhanCongKhai: id => API.get(`/nguoi-dung/cong-khai/${id}`),
+  layDanhSachChoAdmin: keyword => API.get('/nguoi-dung/admin/danh-sach', { params: { keyword } }),
+  layChiTietChoAdmin: id => API.get(`/nguoi-dung/admin/${id}`),
   capNhat: data => API.put('/nguoi-dung/cap-nhat', data),
   capNhatRole: (id, role) => API.put(`/nguoi-dung/${id}/role`, { role }),
   capNhatKhoaTaiKhoan: (id, taiKhoanBiKhoa, lyDoKhoaTaiKhoan) => API.put(`/nguoi-dung/${id}/lock`, { taiKhoanBiKhoa, lyDoKhoaTaiKhoan }),
+  capNhatHanCheHoatDong: (id, payload) => API.put(`/nguoi-dung/${id}/restrict`, payload),
+  capNhatCanhBaoTaiKhoan: (id, canhBaoTaiKhoan) => API.put(`/nguoi-dung/${id}/warning`, { canhBaoTaiKhoan }),
   uploadAvatar: formData => API.post('/nguoi-dung/upload-avatar', formData),
   xacThucCCCD: formData => API.post('/nguoi-dung/xac-thuc-cccd', formData, { timeout: 0 }),
 };
@@ -73,7 +79,10 @@ export const phongAPI = {
   layPhongCuaToi: () => API.get('/phong/cua-toi'),
   layPhongThamGia: () => API.get('/phong/tham-gia'),
   capNhat: (id, data) => API.put(`/phong/${id}`, data),
+  baoCao: (id, payload) => API.post(`/phong/${id}/report`, payload),
+  themThanhVien: (maPhong, maNguoiDung) => API.post(`/phong/${maPhong}/thanh-vien`, { maNguoiDung }),
   xoaThanhVien: (maPhong, maThanhVien) => API.delete(`/phong/${maPhong}/thanh-vien/${maThanhVien}`),
+  roiPhong: maPhong => API.delete(`/phong/${maPhong}/roi-phong`),
   xoa: id => deleteWithFallback(`/phong/${id}`),
 };
 
@@ -84,7 +93,8 @@ export const baiDangAPI = {
   layBaiDangCuaToi: () => API.get('/bai-dang/cua-toi'),
   tao: data => API.post('/bai-dang', data),
   capNhat: (id, data) => API.put(`/bai-dang/${id}`, data),
-  uploadMedia: (id, formData) => API.post(`/bai-dang/${id}/upload-media`, formData),
+  uploadMedia: (id, formData) => API.post(`/bai-dang/${id}/upload-media`, formData, { timeout: 0 }),
+  baoCao: (id, payload) => API.post(`/bai-dang/${id}/report`, payload),
   xoa: id => API.delete(`/bai-dang/${id}`),
 };
 
@@ -103,6 +113,7 @@ export const thanhToanAPI = {
   napTien: soTien => API.post(`/thanh-toan/nap-tien?soTien=${soTien}`),
   taoHoaDon: data => API.post('/thanh-toan/tao-hoa-don', data),
   thanhToan: maHoaDon => API.post(`/thanh-toan/hoa-don/${maHoaDon}/thanh-toan`),
+  xoaHoaDon: maHoaDon => API.delete(`/thanh-toan/hoa-don/${maHoaDon}`),
   chiaTien: maPhong => API.post(`/thanh-toan/chia-tien/${maPhong}`),
   chiaTienThuCong: (maPhong, data) => API.post(`/thanh-toan/chia-tien-thu-cong/${maPhong}`, data),
   layHoaDon: () => API.get('/thanh-toan/hoa-don'),
@@ -116,6 +127,15 @@ export const danhGiaAPI = {
   layNhanDuoc: () => API.get('/danh-gia/nhan-duoc'),
 };
 
+export const banBeAPI = {
+  layDanhSach: () => API.get('/ban-be'),
+  timNguoiDung: keyword => API.get('/ban-be/tim-kiem', { params: { keyword } }),
+  layTrangThai: maNguoiDung => API.get(`/ban-be/trang-thai/${maNguoiDung}`),
+  guiLoiMoi: maNguoiDung => API.post('/ban-be/gui-loi-moi', { maNguoiDung }),
+  phanHoiLoiMoi: (maBanBe, chapNhan) => API.put(`/ban-be/${maBanBe}/phan-hoi`, { chapNhan }),
+  xoaQuanHe: maBanBe => API.delete(`/ban-be/${maBanBe}`),
+};
+
 // ── PHIẾU TẠM TRÚ ────────────────────────────────────────────────────
 export const phieuTamTruAPI = {
   tao: data => API.post('/tam-tru', data),
@@ -124,8 +144,8 @@ export const phieuTamTruAPI = {
   layCuaToi: () => API.get('/tam-tru/cua-toi'),
   layMacDinh: () => API.get('/tam-tru/defaults'),
   layChiTiet: id => API.get(`/tam-tru/${id}`),
-  taiPdfXemTruoc: data => API.post('/tam-tru/preview-pdf', data, { responseType: 'blob' }),
-  taiPdf: id => API.get(`/tam-tru/${id}/pdf`, { responseType: 'blob' }),
+  taiDocxXemTruoc: data => API.post('/tam-tru/preview-docx', data, { responseType: 'blob' }),
+  taiDocx: id => API.get(`/tam-tru/${id}/docx`, { responseType: 'blob' }),
 };
 
 export const thongKeAPI = {
@@ -156,6 +176,14 @@ export const chatAPI = {
 export const adminChatAPI = {
   layBaoCaoHoiThoai: () => API.get('/admin/chat-reports'),
   capNhatBaoCaoHoiThoai: (reportId, payload) => API.put(`/admin/chat-reports/${reportId}`, payload),
+};
+
+export const adminContentAPI = {
+  layBaoCaoNoiDung: () => API.get('/admin/content-reports'),
+  capNhatBaoCaoNoiDung: (reportId, payload) => API.put(`/admin/content-reports/${reportId}`, payload),
+  xoaNoiDungBiBaoCao: reportId => API.delete(`/admin/content-reports/${reportId}/target`),
+  khoaNguoiDung: (reportId, lyDo) => API.put(`/admin/content-reports/${reportId}/lock-user`, { lyDo }),
+  hanCheNguoiDung: (reportId, lyDo) => API.put(`/admin/content-reports/${reportId}/restrict-user`, { lyDo }),
 };
 
 export const addressAPI = {

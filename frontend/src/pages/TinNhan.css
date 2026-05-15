@@ -53,6 +53,83 @@
   border-bottom: 1px solid rgba(18, 53, 91, 0.08);
 }
 
+.messages-contact-search,
+.messages-friends {
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(18, 53, 91, 0.08);
+}
+
+.messages-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.messages-contact-search-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+}
+
+.messages-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.message-quick-user {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.message-quick-user:hover {
+  background: color-mix(in srgb, var(--primary-soft) 92%, transparent);
+  transform: translateY(-1px);
+}
+
+.message-quick-user-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.message-quick-user-body strong {
+  font-size: 14px;
+}
+
+.message-quick-user-body span {
+  color: var(--text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.messages-mini-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 .messages-list {
   flex: 1;
   overflow-y: auto;
@@ -205,5 +282,16 @@
   .messages-panel,
   .messages-panel-empty {
     min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .messages-contact-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .messages-mini-empty {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
