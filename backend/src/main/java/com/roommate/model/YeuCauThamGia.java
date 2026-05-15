@@ -25,6 +25,9 @@ public class YeuCauThamGia {
     @Column(name = "moTa", columnDefinition = "TEXT")
     private String moTa;
 
+    @Column(name = "loaiYeuCau", length = 30)
+    private String loaiYeuCau;
+
     @Column(name = "trangThai", length = 50)
     private String trangThai; // "Cho duyet", "Chap nhan", "Tu choi"
 

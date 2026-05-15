@@ -61,7 +61,6 @@ public class SecurityConfig {
                 .requestMatchers("/api/phong/tim-kiem").permitAll()
                 .requestMatchers("/api/nguoi-dung/cong-khai/**").permitAll()
                 .requestMatchers("/api/thong-ke/**").permitAll()
-                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated()
             )

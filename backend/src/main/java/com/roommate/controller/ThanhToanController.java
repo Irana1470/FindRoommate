@@ -83,4 +83,12 @@ public class ThanhToanController {
             @AuthenticationPrincipal UserDetails ud) {
         return ResponseEntity.ok(ApiResponse.ok(thanhToanService.layHoaDonPhongCuaChuPhong(getMaND(ud))));
     }
+
+    @DeleteMapping("/hoa-don/{maHoaDon}")
+    public ResponseEntity<ApiResponse<Void>> xoaHoaDonDaThanhToan(
+            @AuthenticationPrincipal UserDetails ud,
+            @PathVariable Integer maHoaDon) {
+        thanhToanService.xoaHoaDonDaThanhToan(maHoaDon, getMaND(ud));
+        return ResponseEntity.ok(ApiResponse.ok("Xoa hoa don thanh cong", null));
+    }
 }

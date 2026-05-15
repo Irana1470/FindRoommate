@@ -4,7 +4,6 @@ import lombok.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
 import java.util.List;
 
 public class HoaDonDTO {
@@ -16,6 +15,15 @@ public class HoaDonDTO {
         private Integer maPhong;
         private String tenPhong;
         private BigDecimal tongTien;
+        private BigDecimal tienPhong;
+        private BigDecimal tienDichVu;
+        private BigDecimal tienDien;
+        private BigDecimal tienNuoc;
+        private BigDecimal giaDien;
+        private BigDecimal soDien;
+        private BigDecimal giaNuoc;
+        private BigDecimal soNuoc;
+        private String kieuTinhTienNuoc;
         private String phuongThucThanhToan;
         private String moTa;
         private LocalDateTime ngayTao;
@@ -48,6 +56,11 @@ public class HoaDonDTO {
         @NotNull private BigDecimal tienDichVu;
         @NotNull private BigDecimal tienDien;
         @NotNull private BigDecimal tienNuoc;
+        private BigDecimal giaDien;
+        private BigDecimal soDien;
+        private BigDecimal giaNuoc;
+        private BigDecimal soNuoc;
+        private String kieuTinhTienNuoc;
         private String moTa;
     }
 }

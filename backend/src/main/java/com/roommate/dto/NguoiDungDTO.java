@@ -27,6 +27,13 @@ public class NguoiDungDTO {
         private Boolean xacThuc;
         private Boolean taiKhoanBiKhoa;
         private String lyDoKhoaTaiKhoan;
+        private Boolean biHanCheHoatDong;
+        private String lyDoHanCheHoatDong;
+        private String canhBaoTaiKhoan;
+        private Boolean hanCheDangBai;
+        private Boolean hanCheTaoPhong;
+        private Boolean hanCheGuiYeuCauPhong;
+        private LocalDateTime thoiGianHanCheDen;
         private LocalDateTime ngayTao;
         private Double diemDanhGia;
         private BigDecimal soDuVi;
@@ -53,6 +60,15 @@ public class NguoiDungDTO {
         private Double diemDanhGia;
         private Long tongPhong;
         private Long tongBaiDang;
+        private Boolean taiKhoanBiKhoa;
+        private String lyDoKhoaTaiKhoan;
+        private Boolean biHanCheHoatDong;
+        private String lyDoHanCheHoatDong;
+        private String canhBaoTaiKhoan;
+        private Boolean hanCheDangBai;
+        private Boolean hanCheTaoPhong;
+        private Boolean hanCheGuiYeuCauPhong;
+        private LocalDateTime thoiGianHanCheDen;
         private List<PublicReviewResponse> danhGiaNhanDuoc;
     }
 
@@ -90,5 +106,20 @@ public class NguoiDungDTO {
     public static class CapNhatKhoaTaiKhoanRequest {
         @NotNull private Boolean taiKhoanBiKhoa;
         private String lyDoKhoaTaiKhoan;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor
+    public static class CapNhatHanCheHoatDongRequest {
+        @NotNull private Boolean biHanCheHoatDong;
+        private String lyDoHanCheHoatDong;
+        private Boolean hanCheDangBai;
+        private Boolean hanCheTaoPhong;
+        private Boolean hanCheGuiYeuCauPhong;
+        private LocalDateTime thoiGianHanCheDen;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor
+    public static class CapNhatCanhBaoRequest {
+        private String canhBaoTaiKhoan;
     }
 }

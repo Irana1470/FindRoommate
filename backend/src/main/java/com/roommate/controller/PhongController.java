@@ -110,4 +110,21 @@ public class PhongController {
         phongService.xoaThanhVien(id, getMaND(ud), maThanhVien);
         return ResponseEntity.ok(ApiResponse.ok("Xoa thanh vien thanh cong", null));
     }
+
+    @PostMapping("/{id:\\d+}/thanh-vien")
+    public ResponseEntity<ApiResponse<Void>> themThanhVien(
+            @AuthenticationPrincipal UserDetails ud,
+            @PathVariable Integer id,
+            @Valid @RequestBody PhongDTO.ThemThanhVienRequest req) {
+        phongService.themThanhVien(id, getMaND(ud), req.getMaNguoiDung());
+        return ResponseEntity.ok(ApiResponse.ok("Them thanh vien thanh cong", null));
+    }
+
+    @DeleteMapping("/{id:\\d+}/roi-phong")
+    public ResponseEntity<ApiResponse<Void>> roiPhong(
+            @AuthenticationPrincipal UserDetails ud,
+            @PathVariable Integer id) {
+        phongService.roiPhong(id, getMaND(ud));
+        return ResponseEntity.ok(ApiResponse.ok("Roi phong thanh cong", null));
+    }
 }

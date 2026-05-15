@@ -12,4 +12,10 @@ public interface YeuCauThamGiaRepository extends JpaRepository<YeuCauThamGia, In
     List<YeuCauThamGia> findByNguoiDung_MaNguoiDung(Integer maNguoiDung);
     List<YeuCauThamGia> findByPhong_MaPhongAndTrangThai(Integer maPhong, String trangThai);
     Optional<YeuCauThamGia> findByNguoiDung_MaNguoiDungAndPhong_MaPhong(Integer maNguoiDung, Integer maPhong);
+    Optional<YeuCauThamGia> findByNguoiDung_MaNguoiDungAndPhong_MaPhongAndLoaiYeuCauAndTrangThai(
+            Integer maNguoiDung,
+            Integer maPhong,
+            String loaiYeuCau,
+            String trangThai
+    );
 }

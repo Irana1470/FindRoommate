@@ -91,32 +91,35 @@ public class PhieuTamTruController {
         return ResponseEntity.ok(ApiResponse.ok(phieuTamTruService.layChiTiet(id, getMaND(ud))));
     }
 
-    @PostMapping(value = "/preview-pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> taiBanXemTruocPdf(
+    @PostMapping(value = "/preview-docx",
+            produces = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    public ResponseEntity<byte[]> taiBanXemTruocDocx(
             @AuthenticationPrincipal UserDetails ud,
             @Valid @RequestBody PhieuTamTruDTO.UpsertRequest req) {
         PhieuTamTruDTO.Response preview = phieuTamTruService.taoBanXemTruoc(getMaND(ud), req);
-        return buildPdfResponse(preview, phieuTamTruPdfService.generatePdf(preview));
+        return buildDocxResponse(preview, phieuTamTruPdfService.generateDocx(preview));
     }
 
-    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> taiPdf(
+    @GetMapping(value = "/{id}/docx",
+            produces = "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    public ResponseEntity<byte[]> taiDocx(
             @AuthenticationPrincipal UserDetails ud,
             @PathVariable Integer id) {
         PhieuTamTruDTO.Response response = phieuTamTruService.layChiTiet(id, getMaND(ud));
-        return buildPdfResponse(response, phieuTamTruPdfService.generatePdf(response));
+        return buildDocxResponse(response, phieuTamTruPdfService.generateDocx(response));
     }
 
-    private ResponseEntity<byte[]> buildPdfResponse(PhieuTamTruDTO.Response data, byte[] pdfBytes) {
+    private ResponseEntity<byte[]> buildDocxResponse(PhieuTamTruDTO.Response data, byte[] docxBytes) {
         String safeName = buildSafeName(data.getHoTen(), data.getMaPhieuTamTru());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
-                        .filename("CT01-" + safeName + ".pdf", StandardCharsets.UTF_8)
+                        .filename("CT01-" + safeName + ".docx", StandardCharsets.UTF_8)
                         .build()
                         .toString())
-                .contentType(MediaType.APPLICATION_PDF)
-                .contentLength(pdfBytes.length)
-                .body(pdfBytes);
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .contentLength(docxBytes.length)
+                .body(docxBytes);
     }
 
     private String buildSafeName(String hoTen, Integer maPhieuTamTru) {

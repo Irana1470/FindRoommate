@@ -19,6 +19,7 @@ public class PhongDTO {
         private BigDecimal tienDichVu;
         private BigDecimal tienDien;
         private BigDecimal tienNuoc;
+        private String kieuTinhTienNuoc;
         private Integer soNguoiToiDa;
         private Integer soNguoiHienTai;
         private String tinhThanh;
@@ -37,6 +38,7 @@ public class PhongDTO {
         private BigDecimal tienDichVu;
         private BigDecimal tienDien;
         private BigDecimal tienNuoc;
+        private String kieuTinhTienNuoc;
         @NotNull @Min(1) private Integer soNguoiToiDa;
         @NotBlank private String tinhThanh;
         @NotBlank private String quanHuyen;
@@ -52,6 +54,7 @@ public class PhongDTO {
         private BigDecimal tienDichVu;
         private BigDecimal tienDien;
         private BigDecimal tienNuoc;
+        private String kieuTinhTienNuoc;
         private Integer soNguoiToiDa;
         private String tinhThanh;
         private String quanHuyen;
@@ -66,6 +69,11 @@ public class PhongDTO {
         private String hoTen;
         private String avatar;
         private String ngayThamGia;
+    }
+
+    @Data @NoArgsConstructor @AllArgsConstructor
+    public static class ThemThanhVienRequest {
+        @NotNull private Integer maNguoiDung;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor

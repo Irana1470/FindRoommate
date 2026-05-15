@@ -10,7 +10,6 @@ import com.roommate.repository.BaiDangRepository;
 import com.roommate.repository.NguoiDungRepository;
 import com.roommate.repository.PhongRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,32 +20,34 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BaiDangService {
 
+    private static final int MAX_PARALLEL_IMAGE_UPLOADS = 3;
+
     private final BaiDangRepository baiDangRepo;
     private final NguoiDungRepository nguoiDungRepo;
     private final PhongRepository phongRepo;
     private final ObjectMapper objectMapper;
-
-    @Value("${app.upload.dir:uploads}")
-    private String uploadRootDir;
+    private final CloudinaryMediaService cloudinaryMediaService;
+    private final NguoiDungService nguoiDungService;
 
     @Transactional
     public BaiDangDTO.Response taoBaiDang(Integer maNguoiDung, BaiDangDTO.TaoBaiDangRequest req) {
+        nguoiDungService.yeuCauTaiKhoanKhongBiHanChe(maNguoiDung, NguoiDungService.LoaiHanChe.DANG_BAI);
         NguoiDung nd = nguoiDungRepo.findById(maNguoiDung)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         BaiDang bd = BaiDang.builder()
                 .nguoiDang(nd)
@@ -63,7 +64,7 @@ public class BaiDangService {
 
         if (req.getMaPhong() != null) {
             Phong phong = phongRepo.findById(req.getMaPhong())
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay phong"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng"));
             bd.setPhong(phong);
         }
 
@@ -73,8 +74,9 @@ public class BaiDangService {
     @Transactional
     public BaiDangDTO.Response capNhatBaiDang(Integer maBaiDang, Integer maNguoiDung,
                                               BaiDangDTO.CapNhatBaiDangRequest req) {
+        nguoiDungService.yeuCauTaiKhoanKhongBiHanChe(maNguoiDung, NguoiDungService.LoaiHanChe.DANG_BAI);
         BaiDang bd = baiDangRepo.findById(maBaiDang)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay bai dang"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đăng"));
 
         validateOwner(bd, maNguoiDung, "cap nhat");
 
@@ -101,7 +103,7 @@ public class BaiDangService {
 
         if (req.getMaPhong() != null) {
             Phong phong = phongRepo.findById(req.getMaPhong())
-                    .orElseThrow(() -> new RuntimeException("Khong tim thay phong"));
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng"));
             bd.setPhong(phong);
         } else {
             bd.setPhong(null);
@@ -110,22 +112,15 @@ public class BaiDangService {
         return toResponse(baiDangRepo.saveAndFlush(bd));
     }
 
-    @Transactional
     public BaiDangDTO.MediaUploadResponse uploadMedia(Integer maBaiDang, Integer maNguoiDung,
                                                       List<MultipartFile> files) throws IOException {
         BaiDang bd = baiDangRepo.findById(maBaiDang)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay bai dang"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đăng"));
         validateOwner(bd, maNguoiDung, "upload media cho");
 
         if (files == null || files.isEmpty()) {
-            throw new RuntimeException("Vui long chon media hop le");
+            throw new RuntimeException("Vui lòng chọn media hợp lệ");
         }
-
-        Path uploadDir = Paths.get(uploadRootDir, "baidang").toAbsolutePath().normalize();
-        Files.createDirectories(uploadDir);
-
-        List<String> uploadedImages = new ArrayList<>();
-        String uploadedVideo = null;
 
         List<String> existingImages = new ArrayList<>();
         if (bd.getImages() != null) {
@@ -135,32 +130,36 @@ public class BaiDangService {
             }
         }
 
+        List<MultipartFile> imageFiles = new ArrayList<>();
+        MultipartFile videoFile = null;
+
         for (MultipartFile file : files) {
             validateMedia(file);
             String contentType = file.getContentType().toLowerCase(Locale.ROOT);
 
             if (contentType.startsWith("image/")) {
-                String name = "bd_" + maBaiDang + "_" + System.currentTimeMillis() + getExt(file.getOriginalFilename());
-                Files.copy(file.getInputStream(), uploadDir.resolve(name), StandardCopyOption.REPLACE_EXISTING);
-                uploadedImages.add("/uploads/baidang/" + name);
+                imageFiles.add(file);
                 continue;
             }
 
-            if (uploadedVideo != null) {
+            if (videoFile != null) {
                 throw new RuntimeException("Moi bai dang chi ho tro 1 video");
             }
 
-            String name = "bd_video_" + maBaiDang + "_" + System.currentTimeMillis() + getExt(file.getOriginalFilename());
-            Files.copy(file.getInputStream(), uploadDir.resolve(name), StandardCopyOption.REPLACE_EXISTING);
-            uploadedVideo = "/uploads/baidang/" + name;
+            videoFile = file;
         }
+
+        List<String> uploadedImages = uploadImagesInParallel(imageFiles, "roommate/baidang/images");
+        String uploadedVideo = videoFile == null
+                ? null
+                : cloudinaryMediaService.upload(videoFile, "roommate/baidang/videos").getUrl();
 
         existingImages.addAll(uploadedImages);
         bd.setImages(toImagesJson(existingImages));
         if (uploadedVideo != null) {
             bd.setVideo(uploadedVideo);
         }
-        baiDangRepo.save(bd);
+        saveUploadedMedia(bd);
 
         return BaiDangDTO.MediaUploadResponse.builder()
                 .images(uploadedImages)
@@ -177,7 +176,7 @@ public class BaiDangService {
 
     public BaiDangDTO.Response layChiTiet(Integer maBaiDang) {
         BaiDang bd = baiDangRepo.findById(maBaiDang)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay bai dang"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đăng"));
         bd.setSoLuotXem(bd.getSoLuotXem() + 1);
         baiDangRepo.save(bd);
         return toResponse(bd);
@@ -193,14 +192,21 @@ public class BaiDangService {
     @Transactional
     public void xoaBaiDang(Integer maBaiDang, Integer maNguoiDung) {
         BaiDang bd = baiDangRepo.findById(maBaiDang)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay bai dang"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đăng"));
         validateOwner(bd, maNguoiDung, "xoa");
+        baiDangRepo.delete(bd);
+    }
+
+    @Transactional
+    public void xoaBaiDangByAdmin(Integer maBaiDang) {
+        BaiDang bd = baiDangRepo.findById(maBaiDang)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy bài đăng"));
         baiDangRepo.delete(bd);
     }
 
     private void validateOwner(BaiDang bd, Integer maNguoiDung, String action) {
         if (!bd.getNguoiDang().getMaNguoiDung().equals(maNguoiDung)) {
-            throw new RuntimeException("Ban khong co quyen " + action + " bai dang nay");
+            throw new RuntimeException("Bạn không có quyền " + action + " bài đăng này");
         }
     }
 
@@ -211,7 +217,7 @@ public class BaiDangService {
 
         String normalized = trangThai.trim();
         if (!List.of("Dang", "Tam dung", "Da dong").contains(normalized)) {
-            throw new RuntimeException("Trang thai bai dang khong hop le");
+            throw new RuntimeException("Trạng thái bài đăng không hợp lệ");
         }
         return normalized;
     }
@@ -231,6 +237,10 @@ public class BaiDangService {
                 .tenNguoiDang(b.getNguoiDang().getHoTen())
                 .avatarNguoiDang(b.getNguoiDang().getAvatar())
                 .maPhong(b.getPhong() != null ? b.getPhong().getMaPhong() : null)
+                .tenPhong(b.getPhong() != null ? b.getPhong().getTitle() : null)
+                .soNguoiHienTaiPhong(b.getPhong() != null ? b.getPhong().getSoNguoiHienTai() : null)
+                .soNguoiToiDaPhong(b.getPhong() != null ? b.getPhong().getSoNguoiToiDa() : null)
+                .trangThaiPhong(b.getPhong() != null ? b.getPhong().getTrangThai() : null)
                 .moTa(b.getMoTa())
                 .noiDung(b.getNoiDung())
                 .giaTien(b.getGiaTien())
@@ -245,30 +255,67 @@ public class BaiDangService {
                 .build();
     }
 
-    private String getExt(String filename) {
-        if (filename == null) {
-            return ".jpg";
-        }
-        int dot = filename.lastIndexOf('.');
-        return dot >= 0 ? filename.substring(dot).toLowerCase(Locale.ROOT) : ".jpg";
-    }
-
     private String toImagesJson(List<String> images) {
         try {
             return objectMapper.writeValueAsString(images);
         } catch (IOException e) {
-            throw new RuntimeException("Khong the luu danh sach anh bai dang", e);
+            throw new RuntimeException("Không thể lưu danh sách ảnh bài đăng", e);
+        }
+    }
+
+    @Transactional
+    protected void saveUploadedMedia(BaiDang baiDang) {
+        baiDangRepo.save(baiDang);
+    }
+
+    private List<String> uploadImagesInParallel(List<MultipartFile> imageFiles, String folder) throws IOException {
+        if (imageFiles.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        int poolSize = Math.min(imageFiles.size(), MAX_PARALLEL_IMAGE_UPLOADS);
+        ExecutorService executor = Executors.newFixedThreadPool(poolSize);
+
+        try {
+            List<CompletableFuture<String>> futures = imageFiles.stream()
+                    .map(file -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return cloudinaryMediaService.upload(file, folder).getUrl();
+                        } catch (IOException ex) {
+                            throw new CompletionException(ex);
+                        }
+                    }, executor))
+                    .toList();
+
+            List<String> uploadedImages = new ArrayList<>(futures.size());
+            for (CompletableFuture<String> future : futures) {
+                try {
+                    uploadedImages.add(future.join());
+                } catch (CompletionException ex) {
+                    Throwable cause = ex.getCause();
+                    if (cause instanceof IOException ioException) {
+                        throw ioException;
+                    }
+                    if (cause instanceof RuntimeException runtimeException) {
+                        throw runtimeException;
+                    }
+                    throw new RuntimeException("Không thể upload ảnh bài đăng", cause);
+                }
+            }
+            return uploadedImages;
+        } finally {
+            executor.shutdown();
         }
     }
 
     private void validateMedia(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new RuntimeException("Vui long chon media hop le");
+            throw new RuntimeException("Vui lòng chọn media hợp lệ");
         }
 
         String contentType = file.getContentType();
         if (contentType == null) {
-            throw new RuntimeException("Khong xac dinh duoc loai file");
+            throw new RuntimeException("Không xác định được loại file");
         }
 
         String normalized = contentType.toLowerCase(Locale.ROOT);

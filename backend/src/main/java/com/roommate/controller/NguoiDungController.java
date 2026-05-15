@@ -56,7 +56,7 @@ public class NguoiDungController {
             @AuthenticationPrincipal UserDetails ud,
             @PathVariable Integer id) {
         if (!getMaNguoiDung(ud).equals(id)) {
-            throw new AccessDeniedException("Khong co quyen xem thong tin rieng tu cua nguoi dung nay");
+            throw new AccessDeniedException("Không có quyền xem thông tin riêng tư của người dùng này");
         }
         return ResponseEntity.ok(ApiResponse.ok(nguoiDungService.layThongTin(id)));
     }
@@ -67,11 +67,25 @@ public class NguoiDungController {
         return ResponseEntity.ok(ApiResponse.ok(nguoiDungService.layTrangCaNhanCongKhai(id)));
     }
 
+    @GetMapping("/admin/danh-sach")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<NguoiDungDTO.Response>>> layDanhSachNguoiDungChoAdmin(
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(ApiResponse.ok(nguoiDungService.layDanhSachNguoiDungChoAdmin(keyword)));
+    }
+
+    @GetMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> layChiTietNguoiDungChoAdmin(
+            @PathVariable Integer id) {
+        return ResponseEntity.ok(ApiResponse.ok(nguoiDungService.layThongTin(id)));
+    }
+
     @PutMapping("/cap-nhat")
     public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> capNhat(
             @AuthenticationPrincipal UserDetails ud,
             @Valid @RequestBody NguoiDungDTO.CapNhatRequest req) {
-        return ResponseEntity.ok(ApiResponse.ok("Cap nhat thanh cong",
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật thành công",
                 nguoiDungService.capNhat(getMaNguoiDung(ud), req)));
     }
 
@@ -80,7 +94,7 @@ public class NguoiDungController {
     public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> capNhatVaiTro(
             @PathVariable Integer id,
             @Valid @RequestBody NguoiDungDTO.CapNhatRoleRequest req) {
-        return ResponseEntity.ok(ApiResponse.ok("Cap nhat vai tro thanh cong",
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật vai trò thành công",
                 nguoiDungService.capNhatVaiTro(id, req.getRole())));
     }
 
@@ -89,8 +103,34 @@ public class NguoiDungController {
     public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> capNhatKhoaTaiKhoan(
             @PathVariable Integer id,
             @Valid @RequestBody NguoiDungDTO.CapNhatKhoaTaiKhoanRequest req) {
-        return ResponseEntity.ok(ApiResponse.ok("Cap nhat trang thai tai khoan thanh cong",
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật trạng thái tài khoản thành công",
                 nguoiDungService.capNhatTrangThaiKhoaTaiKhoan(id, req.getTaiKhoanBiKhoa(), req.getLyDoKhoaTaiKhoan())));
+    }
+
+    @PutMapping("/{id}/restrict")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> capNhatHanCheHoatDong(
+            @PathVariable Integer id,
+            @Valid @RequestBody NguoiDungDTO.CapNhatHanCheHoatDongRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật hạn chế hoạt động thành công",
+                nguoiDungService.capNhatHanCheHoatDong(
+                        id,
+                        req.getBiHanCheHoatDong(),
+                        req.getLyDoHanCheHoatDong(),
+                        req.getHanCheDangBai(),
+                        req.getHanCheTaoPhong(),
+                        req.getHanCheGuiYeuCauPhong(),
+                        req.getThoiGianHanCheDen()
+                )));
+    }
+
+    @PutMapping("/{id}/warning")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<NguoiDungDTO.Response>> capNhatCanhBaoTaiKhoan(
+            @PathVariable Integer id,
+            @Valid @RequestBody NguoiDungDTO.CapNhatCanhBaoRequest req) {
+        return ResponseEntity.ok(ApiResponse.ok("Cập nhật cảnh báo tài khoản thành công",
+                nguoiDungService.capNhatCanhBaoTaiKhoan(id, req.getCanhBaoTaiKhoan())));
     }
 
     @PostMapping(value = "/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -98,7 +138,7 @@ public class NguoiDungController {
             @AuthenticationPrincipal UserDetails ud,
             @RequestParam("file") MultipartFile file) throws Exception {
         String url = nguoiDungService.uploadAvatar(getMaNguoiDung(ud), file);
-        return ResponseEntity.ok(ApiResponse.ok("Upload thanh cong", url));
+        return ResponseEntity.ok(ApiResponse.ok("Upload thành công", url));
     }
 
     @PostMapping(value = "/xac-thuc-cccd", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -107,6 +147,6 @@ public class NguoiDungController {
             @RequestParam("matTruoc") MultipartFile matTruoc,
             @RequestParam("matSau") MultipartFile matSau) throws Exception {
         XacThucDTO result = ocrService.xacThucCCCD(getMaNguoiDung(ud), matTruoc, matSau);
-        return ResponseEntity.ok(ApiResponse.ok("Xac thuc thanh cong", result));
+        return ResponseEntity.ok(ApiResponse.ok("Xác thực thành công", result));
     }
 }

@@ -44,5 +44,7 @@ public class AuthDTO {
         private String role;
         private Boolean xacThuc;
         private Boolean taiKhoanBiKhoa;
+        private Boolean biHanCheHoatDong;
+        private String lyDoHanCheHoatDong;
     }
 }

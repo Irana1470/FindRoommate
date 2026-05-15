@@ -62,6 +62,31 @@ public class NguoiDung {
     @Column(name = "lyDoKhoaTaiKhoan", length = 255)
     private String lyDoKhoaTaiKhoan;
 
+    @Builder.Default
+    @Column(name = "biHanCheHoatDong", nullable = false)
+    private Boolean biHanCheHoatDong = false;
+
+    @Column(name = "lyDoHanCheHoatDong", length = 255)
+    private String lyDoHanCheHoatDong;
+
+    @Column(name = "canhBaoTaiKhoan", length = 255)
+    private String canhBaoTaiKhoan;
+
+    @Builder.Default
+    @Column(name = "hanCheDangBai", nullable = false)
+    private Boolean hanCheDangBai = false;
+
+    @Builder.Default
+    @Column(name = "hanCheTaoPhong", nullable = false)
+    private Boolean hanCheTaoPhong = false;
+
+    @Builder.Default
+    @Column(name = "hanCheGuiYeuCauPhong", nullable = false)
+    private Boolean hanCheGuiYeuCauPhong = false;
+
+    @Column(name = "thoiGianHanCheDen")
+    private LocalDateTime thoiGianHanCheDen;
+
     @Column(name = "ngayTao")
     private LocalDateTime ngayTao;
 

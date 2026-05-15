@@ -31,10 +31,10 @@ public class AuthService {
         String soDienThoai = InputValidator.normalizePhone(req.getSoDienThoai(), "So dien thoai", true);
 
         if (nguoiDungRepo.existsByEmail(email)) {
-            throw new RuntimeException("Email da duoc su dung");
+            throw new RuntimeException("Email đã được sử dụng");
         }
         if (nguoiDungRepo.existsBySoDienThoai(soDienThoai)) {
-            throw new RuntimeException("So dien thoai da duoc su dung");
+            throw new RuntimeException("Số điện thoại đã được sử dụng");
         }
 
         NguoiDung nd = NguoiDung.builder()
@@ -59,16 +59,16 @@ public class AuthService {
     public AuthDTO.AuthResponse dangNhap(AuthDTO.DangNhapRequest req) {
         String email = InputValidator.normalizeEmail(req.getEmail());
         NguoiDung nd = nguoiDungRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay nguoi dung"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
         if (Boolean.TRUE.equals(nd.getTaiKhoanBiKhoa())) {
             throw new RuntimeException(nd.getLyDoKhoaTaiKhoan() != null && !nd.getLyDoKhoaTaiKhoan().isBlank()
-                    ? "Tai khoan da bi khoa: " + nd.getLyDoKhoaTaiKhoan()
-                    : "Tai khoan da bi khoa. Vui long lien he admin");
+                    ? "Tài khoản đã bị khóa: " + nd.getLyDoKhoaTaiKhoan()
+                    : "Tài khoản đã bị khóa. Vui lòng liên hệ admin");
         }
 
         if (!xacThucMatKhau(nd, req.getMatKhau())) {
-            throw new RuntimeException("Email hoac mat khau khong dung");
+            throw new RuntimeException("Email hoặc mật khẩu không đúng");
         }
 
         return taoAuthResponse(nd, jwtUtils.generateToken(nd.getEmail()));
@@ -84,6 +84,8 @@ public class AuthService {
                 .role((nd.getRole() != null ? nd.getRole() : VaiTro.USER).name())
                 .xacThuc(nd.getXacThuc())
                 .taiKhoanBiKhoa(nd.getTaiKhoanBiKhoa())
+                .biHanCheHoatDong(nd.getBiHanCheHoatDong())
+                .lyDoHanCheHoatDong(nd.getLyDoHanCheHoatDong())
                 .build();
     }
 

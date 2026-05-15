@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,10 @@ public class ThanhToanService {
         }
 
         hoaDon.setTongTien(tong);
+        hoaDon.setTienPhong(tong);
+        hoaDon.setTienDichVu(BigDecimal.ZERO);
+        hoaDon.setTienDien(BigDecimal.ZERO);
+        hoaDon.setTienNuoc(BigDecimal.ZERO);
         hoaDonRepo.save(hoaDon);
         return toResponse(hoaDon);
     }
@@ -139,7 +144,16 @@ public class ThanhToanService {
                 members,
                 phong,
                 tongChiPhi,
-                "Chia tu dong: tong chi phi = tien phong + dien + nuoc + dich vu, thang " + java.time.LocalDate.now().getMonthValue()
+                "Chia tu dong: tong chi phi = tien phong + dien + nuoc + dich vu, thang " + java.time.LocalDate.now().getMonthValue(),
+                safeMoney(phong.getGiaTien()),
+                safeMoney(phong.getTienDichVu()),
+                safeMoney(phong.getTienDien()),
+                safeMoney(phong.getTienNuoc()),
+                phong.getTienDien(),
+                null,
+                "fixed".equalsIgnoreCase(phong.getKieuTinhTienNuoc()) ? null : phong.getTienNuoc(),
+                null,
+                normalizeWaterBillingMode(phong.getKieuTinhTienNuoc())
         );
     }
 
@@ -157,14 +171,43 @@ public class ThanhToanService {
                 ? req.getMoTa().trim()
                 : "Chia thu cong: tien phong + dien + nuoc + dich vu";
 
-        return taoHoaDonChiaDeu(members, phong, tongChiPhi, moTa);
+        return taoHoaDonChiaDeu(
+                members,
+                phong,
+                tongChiPhi,
+                moTa,
+                safeMoney(req.getTienPhong()),
+                safeMoney(req.getTienDichVu()),
+                safeMoney(req.getTienDien()),
+                safeMoney(req.getTienNuoc()),
+                req.getGiaDien(),
+                req.getSoDien(),
+                req.getGiaNuoc(),
+                req.getSoNuoc(),
+                normalizeWaterBillingMode(req.getKieuTinhTienNuoc() != null ? req.getKieuTinhTienNuoc() : phong.getKieuTinhTienNuoc())
+        );
     }
 
     public List<HoaDonDTO.Response> layHoaDonCuaUser(Integer maNguoiDung) {
         return hoaDonRepo.findByNguoiDung_MaNguoiDung(maNguoiDung)
                 .stream()
+                .filter(hoaDon -> !Boolean.TRUE.equals(hoaDon.getDaAnKhoiNguoiThue()))
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void xoaHoaDonDaThanhToan(Integer maHoaDon, Integer maNguoiDung) {
+        HoaDon hoaDon = hoaDonRepo.findById(maHoaDon)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay hoa don"));
+        if (!hoaDon.getNguoiDung().getMaNguoiDung().equals(maNguoiDung)) {
+            throw new RuntimeException("Ban khong co quyen xoa hoa don nay");
+        }
+        if (!"Da thanh toan".equals(hoaDon.getTrangThai())) {
+            throw new RuntimeException("Chi co the xoa hoa don da thanh toan");
+        }
+        hoaDon.setDaAnKhoiNguoiThue(true);
+        hoaDonRepo.save(hoaDon);
     }
 
     public List<HoaDonDTO.Response> layHoaDonPhongCuaChuPhong(Integer maNguoiDung) {
@@ -203,13 +246,44 @@ public class ThanhToanService {
             BigDecimal tongChiPhi,
             String moTa
     ) {
+        return taoHoaDonChiaDeu(members, phong, tongChiPhi, moTa, null, null, null, null, null, null, null, null, null);
+    }
+
+    private List<HoaDonDTO.Response> taoHoaDonChiaDeu(
+            List<ChiTietPhong> members,
+            Phong phong,
+            BigDecimal tongChiPhi,
+            String moTa,
+            BigDecimal tongTienPhong,
+            BigDecimal tongTienDichVu,
+            BigDecimal tongTienDien,
+            BigDecimal tongTienNuoc,
+            BigDecimal giaDien,
+            BigDecimal soDien,
+            BigDecimal giaNuoc,
+            BigDecimal soNuoc,
+            String kieuTinhTienNuoc
+    ) {
         BigDecimal tienMoiNguoi = tongChiPhi.divide(BigDecimal.valueOf(members.size()), 2, RoundingMode.HALF_UP);
+        BigDecimal tienPhongMoiNguoi = splitComponent(tongTienPhong, members.size());
+        BigDecimal tienDichVuMoiNguoi = splitComponent(tongTienDichVu, members.size());
+        BigDecimal tienDienMoiNguoi = splitComponent(tongTienDien, members.size());
+        BigDecimal tienNuocMoiNguoi = splitComponent(tongTienNuoc, members.size());
 
         return members.stream().map(member -> {
             HoaDon hoaDon = HoaDon.builder()
                     .nguoiDung(member.getNguoiDung())
                     .phong(phong)
                     .tongTien(tienMoiNguoi)
+                    .tienPhong(tienPhongMoiNguoi)
+                    .tienDichVu(tienDichVuMoiNguoi)
+                    .tienDien(tienDienMoiNguoi)
+                    .tienNuoc(tienNuocMoiNguoi)
+                    .giaDien(giaDien)
+                    .soDien(soDien)
+                    .giaNuoc(giaNuoc)
+                    .soNuoc(soNuoc)
+                    .kieuTinhTienNuoc(kieuTinhTienNuoc)
                     .moTa(moTa)
                     .trangThai("Chua thanh toan")
                     .build();
@@ -218,6 +292,45 @@ public class ThanhToanService {
     }
 
     private HoaDonDTO.Response toResponse(HoaDon hoaDon) {
+        List<HoaDonDTO.ChiTietItem> chiTiet = new ArrayList<>();
+        if (safeMoney(hoaDon.getTienPhong()).compareTo(BigDecimal.ZERO) > 0) {
+            chiTiet.add(HoaDonDTO.ChiTietItem.builder()
+                    .tenDichVu("Tiền phòng")
+                    .soLuong(1)
+                    .donGia(safeMoney(hoaDon.getTienPhong()))
+                    .thanhTien(safeMoney(hoaDon.getTienPhong()))
+                    .build());
+        }
+        if (safeMoney(hoaDon.getTienDien()).compareTo(BigDecimal.ZERO) > 0) {
+            chiTiet.add(HoaDonDTO.ChiTietItem.builder()
+                    .tenDichVu("Tiền điện")
+                    .donGia(hoaDon.getGiaDien())
+                    .thanhTien(safeMoney(hoaDon.getTienDien()))
+                    .build());
+        }
+        if (safeMoney(hoaDon.getTienNuoc()).compareTo(BigDecimal.ZERO) > 0) {
+            chiTiet.add(HoaDonDTO.ChiTietItem.builder()
+                    .tenDichVu("Tiền nước")
+                    .donGia(hoaDon.getGiaNuoc())
+                    .thanhTien(safeMoney(hoaDon.getTienNuoc()))
+                    .build());
+        }
+        if (safeMoney(hoaDon.getTienDichVu()).compareTo(BigDecimal.ZERO) > 0) {
+            chiTiet.add(HoaDonDTO.ChiTietItem.builder()
+                    .tenDichVu("Dịch vụ")
+                    .soLuong(1)
+                    .donGia(safeMoney(hoaDon.getTienDichVu()))
+                    .thanhTien(safeMoney(hoaDon.getTienDichVu()))
+                    .build());
+        }
+        if (hoaDon.getChiTietHoaDons() != null) {
+            hoaDon.getChiTietHoaDons().forEach(item -> chiTiet.add(HoaDonDTO.ChiTietItem.builder()
+                    .tenDichVu(item.getDichVu() != null ? item.getDichVu().getTenDichVu() : "Dịch vụ")
+                    .soLuong(item.getSoLuongSuDung())
+                    .donGia(item.getDichVu() != null ? item.getDichVu().getGiaTien() : item.getThanhTien())
+                    .thanhTien(item.getThanhTien())
+                    .build()));
+        }
         return HoaDonDTO.Response.builder()
                 .maHoaDon(hoaDon.getMaHoaDon())
                 .maNguoiDung(hoaDon.getNguoiDung().getMaNguoiDung())
@@ -225,16 +338,37 @@ public class ThanhToanService {
                 .maPhong(hoaDon.getPhong().getMaPhong())
                 .tenPhong(hoaDon.getPhong().getTitle())
                 .tongTien(hoaDon.getTongTien())
+                .tienPhong(safeMoney(hoaDon.getTienPhong()))
+                .tienDichVu(safeMoney(hoaDon.getTienDichVu()))
+                .tienDien(safeMoney(hoaDon.getTienDien()))
+                .tienNuoc(safeMoney(hoaDon.getTienNuoc()))
+                .giaDien(hoaDon.getGiaDien())
+                .soDien(hoaDon.getSoDien())
+                .giaNuoc(hoaDon.getGiaNuoc())
+                .soNuoc(hoaDon.getSoNuoc())
+                .kieuTinhTienNuoc(normalizeWaterBillingMode(hoaDon.getKieuTinhTienNuoc()))
                 .phuongThucThanhToan(hoaDon.getPhuongThucThanhToan())
                 .moTa(hoaDon.getMoTa())
                 .ngayTao(hoaDon.getNgayTao())
                 .ngayThanhToan(hoaDon.getNgayThanhToan())
                 .trangThai(hoaDon.getTrangThai())
+                .chiTiet(chiTiet)
                 .build();
     }
 
     private BigDecimal safeMoney(BigDecimal value) {
         return value != null ? value : BigDecimal.ZERO;
+    }
+
+    private BigDecimal splitComponent(BigDecimal total, int members) {
+        if (total == null) {
+            return BigDecimal.ZERO;
+        }
+        return total.divide(BigDecimal.valueOf(members), 2, RoundingMode.HALF_UP);
+    }
+
+    private String normalizeWaterBillingMode(String value) {
+        return "fixed".equalsIgnoreCase(value) ? "fixed" : "meter";
     }
 
     private void luuGiaoDichVi(

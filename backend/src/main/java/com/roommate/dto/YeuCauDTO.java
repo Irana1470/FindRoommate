@@ -3,8 +3,6 @@ package com.roommate.dto;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
-import java.time.LocalDate;
-
 public class YeuCauDTO {
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
     public static class Response {
@@ -16,12 +14,13 @@ public class YeuCauDTO {
         private String tenPhong;
         private LocalDateTime ngayYeuCau;
         private String moTa;
+        private String loaiYeuCau;
         private String trangThai;
     }
     @Data @NoArgsConstructor @AllArgsConstructor
     public static class TaoYeuCauRequest {
         @NotNull private Integer maPhong;
         private String moTa;
+        private String loaiYeuCau;
     }
 }
-

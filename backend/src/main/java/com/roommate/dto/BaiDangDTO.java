@@ -15,6 +15,10 @@ public class BaiDangDTO {
         private String tenNguoiDang;
         private String avatarNguoiDang;
         private Integer maPhong;
+        private String tenPhong;
+        private Integer soNguoiHienTaiPhong;
+        private Integer soNguoiToiDaPhong;
+        private String trangThaiPhong;
         private String moTa;
         private String noiDung;
         private BigDecimal giaTien;

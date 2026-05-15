@@ -39,6 +39,9 @@ public class Phong {
     @Column(name = "tienNuoc", precision = 18, scale = 2)
     private BigDecimal tienNuoc;
 
+    @Column(name = "kieuTinhTienNuoc", length = 20)
+    private String kieuTinhTienNuoc;
+
     @Column(name = "soNguoiToiDa")
     private Integer soNguoiToiDa;
 

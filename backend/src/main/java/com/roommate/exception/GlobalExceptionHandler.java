@@ -3,10 +3,12 @@ package com.roommate.exception;
 import com.roommate.dto.ApiResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -35,6 +37,21 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
         return ResponseEntity.badRequest().body(ApiResponse.error(msg));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMessageNotReadable(HttpMessageNotReadableException ex) {
+        String rawMessage = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
+
+        if (rawMessage != null && rawMessage.contains("java.time.LocalDate")) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.error("Ngay khong hop le. Vui long nhap theo dinh dang yyyy-MM-dd.")
+            );
+        }
+
+        return ResponseEntity.badRequest().body(ApiResponse.error("Du lieu gui len khong hop le."));
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)

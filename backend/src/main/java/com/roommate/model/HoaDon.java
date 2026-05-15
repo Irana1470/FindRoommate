@@ -25,6 +25,33 @@ public class HoaDon {
     @Column(name = "tongTien", precision = 18, scale = 2)
     private BigDecimal tongTien;
 
+    @Column(name = "tienPhong", precision = 18, scale = 2)
+    private BigDecimal tienPhong;
+
+    @Column(name = "tienDichVu", precision = 18, scale = 2)
+    private BigDecimal tienDichVu;
+
+    @Column(name = "tienDien", precision = 18, scale = 2)
+    private BigDecimal tienDien;
+
+    @Column(name = "tienNuoc", precision = 18, scale = 2)
+    private BigDecimal tienNuoc;
+
+    @Column(name = "giaDien", precision = 18, scale = 2)
+    private BigDecimal giaDien;
+
+    @Column(name = "soDien", precision = 18, scale = 2)
+    private BigDecimal soDien;
+
+    @Column(name = "giaNuoc", precision = 18, scale = 2)
+    private BigDecimal giaNuoc;
+
+    @Column(name = "soNuoc", precision = 18, scale = 2)
+    private BigDecimal soNuoc;
+
+    @Column(name = "kieuTinhTienNuoc", length = 20)
+    private String kieuTinhTienNuoc;
+
     @Column(name = "phuongThucThanhToan", length = 50)
     private String phuongThucThanhToan;
 
@@ -39,6 +66,10 @@ public class HoaDon {
 
     @Column(name = "trangThai", length = 50)
     private String trangThai; // "Da thanh toan", "Chua thanh toan"
+
+    @Builder.Default
+    @Column(name = "daAnKhoiNguoiThue", nullable = false)
+    private Boolean daAnKhoiNguoiThue = false;
 
     @OneToMany(mappedBy = "hoaDon", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ChiTietHoaDon> chiTietHoaDons;
